@@ -13,13 +13,13 @@ from config import user_name
 from functions import Function
 from matplotlib.pyplot import figure
 
-D = dc.Decimal
 
 # абстрактный класс - метод для обобщения всех используемых методов
 class Method(abc.ABC):
     def   __init__(self, id_exp: int, used_function: Function = None):
         self.id_exp = id_exp
         self.used_function = used_function
+        self.experiment_data = reliase.get_experiment_as_id(id_exp)
 
     def margulis(self, a1, a2, x, temp):
         #return 8.31 * temp * x * (1 - x) * ((1 - x) * a1 + a2 * x)
@@ -27,14 +27,15 @@ class Method(abc.ABC):
         return Function.margulis(a1, a2, x, temp)
 
     def minimum(self, gej, a1, a2, x, temp):
-        return D((gej - self.margulis(a1,a2,x,temp)) ** 2)
+        return (gej - self.margulis(a1,a2,x,temp)) ** 2
 
     def minimum_sum(self, arr, a1, a2):
-        summ = D(0)
-        temp = D(arr[0][0])
+        summ = 0
+        #temp = arr[0][0]
+        temp = self.experiment_data['temperature']
         for i in range(1, len(arr)):
-            x = D(arr[i][0])
-            gej = D(arr[i][1])
+            x = arr[i][0]
+            gej = arr[i][1]
             summ += self.minimum(gej, a1, a2, x, temp)
         return summ
 
@@ -49,10 +50,6 @@ class Method(abc.ABC):
         for i in range(min(len(source_data['x2']), len(source_data['GEJ']))):
             result.append([float(source_data['x2'][i]), int(source_data['GEJ'][i])])
         return result
-        # csv_mas = [[0.0697, 407], [0.096, 523], [0.1038, 554], [0.1312, 654], [0.1325, 659], [0.2160, 888], [0.2739, 995],
-        #            [0.4069, 1116], [0.4984, 1112], [0.5977, 1036], [0.6275, 999], [0.7020, 880], [0.7197, 846],
-        #            [0.8078, 643], [0.8115, 634], [0.9187, 307]]
-        # return csv_mas
 
 
     def draw_chart(self, ax):
@@ -135,13 +132,13 @@ class MethodGaussZeidel(Method):
         super().__init__(id_exp)
 
     def calculate(self, list_of_values, a12, a21):
-        a12 = D(a12)
-        a21 = D(a21)
-        a1 = D(a12)
-        a2 = D(a21)
-        step_a1 = D(1)
-        step_a2 = D(1)
-        iterations = D(0)
+        a12 = a12
+        a21 = a21
+        a1 = a12
+        a2 = a21
+        step_a1 = 1
+        step_a2 = 1
+        iterations = 0
         minimorum = self.minimum_sum(list_of_values, a1, a2)
         a1_list = []
         a2_list = []
