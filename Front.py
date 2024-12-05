@@ -1,7 +1,7 @@
 import sys
 from PyQt5.QtGui import QTextTable, QPalette
 from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QDialog, QVBoxLayout, QLabel, QTableWidget, QWidget, \
-    QLineEdit, QHBoxLayout, QTabWidget, QTableWidgetItem, QMessageBox, QMenu, QAbstractItemView
+    QLineEdit, QHBoxLayout, QTabWidget, QTableWidgetItem, QMessageBox, QMenu, QAbstractItemView, QToolBox
 from PyQt5.QtCore import Qt
 from PyQt5 import uic, QtWidgets
 import json
@@ -250,7 +250,7 @@ class ExperimentInfoDialog(QDialog):
     def __init__(self, id_experiments: list):
         super().__init__()
 
-        self.ui = uic.loadUi('experimentInfoDialog.ui', self)
+        self.ui = uic.loadUi('ui/experimentInfoDialog.ui', self)
 
         self.id_experiments = id_experiments
         self.showInfo()
@@ -261,6 +261,14 @@ class ExperimentInfoDialog(QDialog):
             for item in inform.items():
                 self.ui.listWidget.addItem(f'{item[0]}: {item[1]}')
             self.ui.listWidget.addItem('\n')
+
+
+# окно с фильтрами экспериментов для поиска по элементам
+class FiltersDialog(QDialog):
+    def __init__(self):
+        super().__init__()
+        self.ui = uic.loadUi('ui/FiltersDialog.ui')
+
 
 
 

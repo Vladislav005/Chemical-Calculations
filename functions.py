@@ -16,7 +16,8 @@ class Function:
 
     @staticmethod
     def margulis(a1, a2, x, temp):
-        return dc.Decimal(dc.Decimal(8.31) * temp * x * (1 - x) * ((1 - x) * a1 + a2 * x))
+        D = dc.Decimal
+        return D(D(8.31) * D(temp) * D(x * (1 - x) * ((1 - x) * a1 + a2 * x)))
 
 margulis = Function("8.31 * temp * x * (1 - x) * ((1 - x) * a1 + a2 * x)")
 

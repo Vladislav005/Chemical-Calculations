@@ -170,9 +170,33 @@ def get_ids_experiments_by_name(element_type: str)->list:
             result.append(r['id'])
         return result
 
+def bring_to_normal_filter(element_filter:list):
+    for i in range(len(element_filter)):
+        element = element_filter[i]
+        element = element.lower()
+        if element != 'not':
+            first_letter = element[0].upper()
+            element = first_letter + element[1:]
+        element_filter[i] = element
+
+
 def get_elements_list_by_filter(element_filter: str):
     from search import SEARCH_TREE
-    return SEARCH_TREE.get_elements(element_filter)
+    filters_list = element_filter.split(' ')
+    returned_list = []
+    is_except = False
+    for f in filters_list:
+        if f == 'not':
+            is_except = True
+        else:
+            if is_except:
+                all_elements = SEARCH_TREE.get_elements('Any')
+                except_elements = SEARCH_TREE.get_elements(f)
+                returned_list += [i for i in all_elements if i not in except_elements]
+            else:
+                returned_list += SEARCH_TREE.get_elements(f)
+            is_except = False
+    return returned_list
 
 
 
@@ -224,4 +248,6 @@ def get_elements_list_by_filter(element_filter: str):
         #     cursor.execute(create_table_query)
 
 if __name__ == '__main__':
-    print(get_all_elements('experiments'))
+    element_filter = ['etHanOl', 'not', '1-hexanol']
+    bring_to_normal_filter(element_filter)
+    print(element_filter)
