@@ -4,26 +4,29 @@ from config import user_name
 from db import create_connection
 from functions import Function
 
+# connection = create_mysql_connection()
 connection = create_connection()
 
 
-
 class Experiment:
-    def __init__(self, first_element: str, second_element: str, temperature: int, source_data: dict, article: int):
+    def __init__(self, first_element: str, second_element: str, temperature, pressure, source_data: dict, article: int):
         self.first_element = first_element
         self.second_element = second_element
+        if pressure == None:
+            pressure = 'NULL'
         self.temperature = temperature
+        self.pressure = pressure
         self.source_data = source_data
         self.article = article
 
     # добавление эксперимента в бд
     def add_into_db(self):
-        with (connection.cursor() as cursor):
-            source_data_json = json.dumps(self.source_data)
-            insert_query = "INSERT INTO experiments (first_element, second_element, temperature, source_data, article) VALUES " \
-                           "('" + self.first_element + "', '" + self.second_element + "', '" + str(self.temperature) + "', '" + source_data_json + "', '" + str(self.article) + "');"
-            cursor.execute(insert_query)
-            connection.commit()
+        cursor = connection.cursor()
+        source_data_json = json.dumps(self.source_data)
+        insert_query = "INSERT INTO experiments (first_element, second_element, temperature, pressure, source_data, article) VALUES " \
+                       "('" + self.first_element + "', '" + self.second_element + "', " + str(self.temperature) + ", " + str(self.pressure) + ", '" + source_data_json + "', '" + str(self.article) + "');"
+        cursor.execute(insert_query)
+        connection.commit()
 
 
 class Element:
@@ -33,10 +36,10 @@ class Element:
 
     # добавление элемента в бд
     def add_into_bd(self):
-        with connection.cursor() as cursor:
-            insert_query = "INSERT INTO elements (name, specifications) VALUES ('" + self.name + "', '" + self.specifications_string + "');"
-            cursor.execute(insert_query)
-            connection.commit()
+        cursor = connection.cursor()
+        insert_query = "INSERT INTO elements (name, specifications) VALUES ('" + self.name + "', '" + self.specifications_string + "');"
+        cursor.execute(insert_query)
+        connection.commit()
 
 
 class Attempt:
@@ -77,11 +80,13 @@ def crash(arr: list):
 
 # получение словаря со всеми данными из бд об элементах
 def get_all_elements(table_name: str):
-    with connection.cursor() as cursor:
-        select_all_rows = "SELECT * FROM " + table_name
-        cursor.execute(select_all_rows)
-        rows = cursor.fetchall()
-        return rows
+    cursor =  connection.cursor()
+    select_all_rows = "SELECT * FROM " + table_name
+    cursor.execute(select_all_rows)
+    rows = cursor.fetchall()
+    for i in range(len(rows)):
+        rows[i] = dict(rows[i])
+    return rows
 
 
 # для добавления в бд информации о попытке расчета
@@ -91,61 +96,61 @@ def add_attempt(id_exp: int, id_method: int, init: dict, result: dict):
         init_data = json.dumps(init)
         result_data = json.dumps(result)
         username = user_name
-        with connection.cursor() as cursor:
-            insert_query = ("INSERT INTO attempts (username, experiment_id, method_id, initial_a1, initial_a2, result_a1, result_a2) "\
-                            "VALUES ('") + username + "', '" + str(id_exp) + "', '" + str(id_method) + "', '" + init_data + "', '" + result_data + "', '" + "');"
-            cursor.execute(insert_query)
-            connection.commit()
+        cursor = connection.cursor()
+        insert_query = ("INSERT INTO attempts (username, experiment_id, method_id, initial_a1, initial_a2, result_a1, result_a2) "\
+                        "VALUES ('") + username + "', '" + str(id_exp) + "', '" + str(id_method) + "', '" + init_data + "', '" + result_data + "', '" + "');"
+        cursor.execute(insert_query)
+        connection.commit()
     except Exception as ex:
         print(ex)
 
 # получение данных об эксперименте по его id
 def get_experiment_as_id(id_exp: int):
-    # with connection.cursor() as cursor:
-    #     select_query = "SELECT * FROM experiments WHERE id = " + str(id_exp) + ";"
-    #     cursor.execute(select_query)
-    #     return cursor.fetchall()[0]
-    with connection.cursor() as cursor:
-        select_query = "SELECT * FROM experiments;"
-        cursor.execute(select_query)
-        return cursor.fetchall()[id_exp - 1]
+    cursor = connection.cursor()
+    select_query = f"SELECT * FROM experiments WHERE id == {id_exp}"
+    cursor.execute(select_query)
+    return dict(cursor.fetchone())
 
 
 
 
 # Для работы с базами данных вне классов
 def delete_experiment(id_exp: int):
-    with connection.cursor() as cursor:
-        delete_query = "DELETE FROM experiments WHERE id = " + str(id_exp) + ";"
-        cursor.execute(delete_query)
-        connection.commit()
+    cursor = connection.cursor()
+    delete_query = "DELETE FROM experiments WHERE id = " + str(id_exp) + ";"
+    cursor.execute(delete_query)
+    connection.commit()
 
 def add_article(name, author, year, link):
-    with connection.cursor() as cursor:
-        insert_query = "INSERT INTO articles (name, author, year, link) VALUES ('" + name + "', '" + author + "', '" + str(year) + "', '" + link + "');"
-        cursor.execute(insert_query)
-        connection.commit()
+    cursor = connection.cursor()
+    insert_query = "INSERT INTO articles (name, author, year, link) VALUES ('" + name + "', '" + author + "', '" + str(year) + "', '" + link + "');"
+    cursor.execute(insert_query)
+    connection.commit()
 
 def delete_article(num):
-    with connection.cursor() as cursor:
-        delete_query = "DELETE FROM articles WHERE num = " + str(num) + ";"
-        cursor.execute(delete_query)
-        connection.commit()
+    cursor = connection.cursor()
+    delete_query = "DELETE FROM articles WHERE num = " + str(num) + ";"
+    cursor.execute(delete_query)
+    connection.commit()
 
 def get_article_name(article_id:int):
-    with connection.cursor() as cursor:
-        select_query = f'SELECT name FROM articles WHERE id = {article_id};'
-        cursor.execute(select_query)
-        return cursor.fetchall()[0]['name']
+    cursor = connection.cursor()
+    select_query = f'SELECT name FROM articles WHERE id = {article_id};'
+    cursor.execute(select_query)
+    res = cursor.fetchone()
+    if res:
+        return res['name']
+    else:
+        return None
 
 
 # извлечение ветки элемента из базы данных
 def get_branch(element_name: str)->list:
-    with connection.cursor() as cursor:
-        select_query = f'SELECT branch FROM elements WHERE name = \'{element_name}\''
-        cursor.execute(select_query)
-        branch = cursor.fetchall()
-        return branch[0]['branch'].split(';')[:-1]
+    cursor = connection.cursor()
+    select_query = f'SELECT branch FROM elements WHERE name = \'{element_name}\''
+    cursor.execute(select_query)
+    branch = cursor.fetchall()
+    return branch[0]['branch'].split(';')[:-1]
 
 
 def get_ids_experiments_by_name(element_type: str)->list:
@@ -170,19 +175,27 @@ def get_ids_experiments_by_name(element_type: str)->list:
             result.append(r['id'])
         return result
 
-def bring_to_normal_filter(element_filter:list):
+def bring_to_normal_filter(filters:list):
+    element_filter = filters.copy()
     for i in range(len(element_filter)):
         element = element_filter[i]
         element = element.lower()
         if element != 'not':
             first_letter = element[0].upper()
             element = first_letter + element[1:]
+            index = element.find('-')
+            if index != -1 and index != len(element) - 1:
+                first_letter = element[index + 1].upper()
+                element = element[:index + 1] + first_letter + element[(index+2):] 
         element_filter[i] = element
+    return element_filter
+    
 
 
 def get_elements_list_by_filter(element_filter: str):
     from search import SEARCH_TREE
     filters_list = element_filter.split(' ')
+    filters_list = bring_to_normal_filter(filters_list)
     returned_list = []
     is_except = False
     for f in filters_list:
@@ -248,6 +261,4 @@ def get_elements_list_by_filter(element_filter: str):
         #     cursor.execute(create_table_query)
 
 if __name__ == '__main__':
-    element_filter = ['etHanOl', 'not', '1-hexanol']
-    bring_to_normal_filter(element_filter)
-    print(element_filter)
+    print(get_experiment_as_id(2))

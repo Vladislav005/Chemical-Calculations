@@ -25,5 +25,12 @@ def get_experiment_from_csv(path: str):
     
 
 if __name__ == '__main__':
-    path = 'D:\Python projects\Chemistry\import_file.csv'
-    experiment = get_experiment_from_csv(path)
+    import os
+
+    directory = 'articles/Excess Gibbs Free Energies at Eight Temperatures and Excess'
+    files = os.listdir(directory)
+    files.sort()
+    for file in files:
+        path = directory + '/' + file
+        exp = get_experiment_from_csv(path)
+        exp.add_into_db()

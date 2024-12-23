@@ -1,6 +1,6 @@
 import random
 
-from methods import MethodOfSimulatedAnnealing, MethodGaussZeidel, MethodHookJeeves, MethodAntigradient
+from methods import MethodOfSimulatedAnnealing, MethodGaussZeidel, MethodHookJeeves, MethodAntigradient, MethodNewton
 
 
 def simple_calculation(id_exp, a12, a21, method_num):
@@ -14,8 +14,10 @@ def simple_calculation(id_exp, a12, a21, method_num):
             method = MethodHookJeeves(id_exp)
         case 3:
             method = MethodAntigradient(id_exp)
+        case 4:
+            method = MethodNewton(id_exp)
 
-    a12_new, a21_new, _, _ = method.calculate(method.make_list(id_exp), a12, a21)
+    a12_new, a21_new, _ = method.calculate(a12, a21)
     return a12_new, a21_new
 
 
@@ -30,13 +32,15 @@ def multi_start(id_exp: int, a12_min: float, a12_max: float, a21_min: float, a21
             method = MethodHookJeeves(id_exp)
         case 3:
             method = MethodAntigradient(id_exp)
+        case 4:
+            method = MethodNewton(id_exp)
 
     iteration = 0
     result = []
     while iteration < count:
         a12 = random.uniform(a12_min, a12_max)
         a21 = random.uniform(a21_min, a21_max)
-        a12_new, a21_new, _, _ = method.calculate(method.make_list(id_exp), a12, a21)
+        a12_new, a21_new, _ = method.calculate(a12, a21)
         if a12_min <= a12_new <= a12_max and a21_min <= a21_new <= a21_max:
             result.append([a12_new, a21_new])
         iteration += 1

@@ -13,6 +13,7 @@ from config import user_name
 from functions import Function
 from matplotlib.pyplot import figure
 
+
 D = dc.Decimal
 R = D(8.31)
 
@@ -121,12 +122,11 @@ class Method(abc.ABC):
         return [[H[1][1] / detH, (D(-1) * H[0][1]) / detH], [(D(-1) * H[1][0]) / detH, H[0][0] / detH]]
 
 
-    def draw_chart(self, ax):
+    def draw_chart(self, ax=None):
         arr = self.make_list(self.id_exp)
-
         a1, a2 = 0, 0
 
-        otz = self.calculate(arr, a1, a2)
+        otz = self.calculate(a1, a2)
         a12 = otz[0]
         a21 = otz[1]
 
@@ -370,6 +370,7 @@ if __name__ == '__main__':
     method = MethodAntigradient(1)
     a12, a21, minimum = method.calculate(0, 0)
     print(a12,a21,minimum)
+    method.draw_chart()
 
     method = MethodNewton(1)
     a12, a21, minimum = method.calculate(0, 0)

@@ -1,7 +1,7 @@
 import sys
 from PyQt5.QtGui import QTextTable, QPalette
 from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QDialog, QVBoxLayout, QLabel, QTableWidget, QWidget, \
-    QLineEdit, QHBoxLayout, QTabWidget, QTableWidgetItem, QMessageBox, QMenu, QAbstractItemView, QToolBox
+    QLineEdit, QHBoxLayout, QTabWidget, QTableWidgetItem, QMessageBox, QMenu, QAbstractItemView, QToolBox, QFileDialog
 from PyQt5.QtCore import Qt
 from PyQt5 import uic, QtWidgets
 import json
@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 import reliase
 from reliase import Attempt, get_all_elements, crash, Experiment, add_attempt
 import methods
-from methods import MethodOfSimulatedAnnealing, MethodHookJeeves, MethodGaussZeidel, MethodAntigradient
+from methods import MethodOfSimulatedAnnealing, MethodHookJeeves, MethodGaussZeidel, MethodAntigradient, MethodNewton
 from calc import simple_calculation, multi_start
 import functions
 
@@ -49,6 +49,8 @@ class AttemptWidget(QWidget):
                 method = MethodHookJeeves(self.attempt.id_exp)
             case 3:
                 method = MethodAntigradient(self.attempt.id_exp)
+            case 4:
+                method = MethodNewton(self.attempt.id_exp)
         ax = self.figure.add_subplot(111)
         method.draw_chart(ax)
         self.canvas.draw()
@@ -270,6 +272,18 @@ class FiltersDialog(QDialog):
         self.ui = uic.loadUi('ui/FiltersDialog.ui')
 
 
+# окно для открытия файла для импорта данных эксперимента
+class importExperimentDialog(QDialog):
+    def __init__(self):
+        super().__init__()
+        self.ui = uic.loadUi('ui/ImportExperimentDialog.ui')
+        self.ui.fileDialogButton.clicked.connect(self.open_path_dialog)
+
+
+    def open_path_dialog(self):
+        options = QFileDialog.Options()
+        fileName, _ = QFileDialog.getOpenFileName(self, "Выберите файл", "", "All Files (*);;Text Files (*.txt)", options=options)
+        print(fileName)
 
 
 #   ОСНОВНОЕ ОКНО   ##################################################################################################################################################
@@ -280,10 +294,8 @@ class MainWindow(QMainWindow):
         self.ui = uic.loadUi('ui/UiForChem.ui', self)
 
         # для экспериментов
-        self.ui.find_button.clicked.connect(self.find_button_clicked)
         self.ui.add_button.clicked.connect(self.add_button_clicked)
-        self.ui.update_button_experiments.clicked.connect(self.create_table_experiments)
-        self.ui.calculate_button.clicked.connect(self.calculate_button_clicked)
+        self.ui.update_button_experiments.clicked.connect(self.update_table_experiments)
         self.ui.filterButton.clicked.connect(self.filterButton_clicked)
         self.ui.swapButton.clicked.connect(self.swapButtonClicked)
 
@@ -328,7 +340,7 @@ class MainWindow(QMainWindow):
 
         j = 0
         for i in range(0, len(experiments)):
-            if (experiments[i]['first_element'] in first_element_list and experiments[i]['second_element'] in second_element_list):
+            if (experiments[i]['first_element'] in first_element_list or first_element_filter == 'Any') and (experiments[i]['second_element'] in second_element_list or second_element_filter == 'Any'):
                 self.ui.experimentsTab.insertRow(self.ui.experimentsTab.rowCount())
                 exp_arr = json.loads(experiments[i]['source_data'])
                 self.ui.experimentsTab.setItem(j, 0, QTableWidgetItem(str(experiments[i]['id'])))
@@ -340,6 +352,7 @@ class MainWindow(QMainWindow):
                 self.ui.experimentsTab.setItem(j, 4, QTableWidgetItem(pressure()))
                 self.ui.experimentsTab.setItem(j, 5, QTableWidgetItem(reliase.get_article_name(experiments[i]['article'])))
                 j += 1
+    
 
         # подгон размера столбцов под данные
         horizontalHeader = self.ui.experimentsTab.horizontalHeader()
@@ -347,18 +360,22 @@ class MainWindow(QMainWindow):
             horizontalHeader.setSectionResizeMode(i, QtWidgets.QHeaderView.ResizeToContents)
         horizontalHeader.setSectionResizeMode(self.ui.experimentsTab.columnCount() - 1, QtWidgets.QHeaderView.Stretch)
 
+    # обновление таблицы элементов
+    def update_table_experiments(self):
+        self.create_table_experiments()
+
     # создание таблицы элементов
     def create_table_elements(self):
         self.ui.elementsTab.setRowCount(0)
         self.ui.elementsTab.setRowCount(1)
 
-        # elements = get_all_elements('elements')
-        #
-        # for i in range(0, len(elements)):
-        #     self.ui.elementsTab.insertRow(self.ui.elementsTab.rowCount())
-        #     spec_arr = elements[i]['specifications'].split('#')[1:]
-        #     self.ui.elementsTab.setItem(i, 0, QTableWidgetItem(elements[i]['name']))
-        #     self.ui.elementsTab.setItem(i, 1, QTableWidgetItem(crash(spec_arr)))
+        elements = get_all_elements('elements')
+        
+        for i in range(0, len(elements)):
+            self.ui.elementsTab.insertRow(self.ui.elementsTab.rowCount())
+            spec_arr = elements[i]['branch'].split(';')
+            self.ui.elementsTab.setItem(i, 0, QTableWidgetItem(elements[i]['name']))
+            self.ui.elementsTab.setItem(i, 1, QTableWidgetItem(crash(spec_arr)))
 
     # обработка нажатия на таблицу экспериментов
     def clicked_on_experiments_tab(self, event = None):
@@ -383,7 +400,7 @@ class MainWindow(QMainWindow):
 
     # функция для обработки нажатия на кнопку "Добавить" во вкладке Эксперименты
     def add_button_clicked(self):
-        self.ui.add_window = AddExperimentWindow()
+        self.ui.add_window = importExperimentDialog()
         self.add_window.show()
 
     # функция для обработки нажатия на кнопку "Рассчитать"
@@ -450,8 +467,9 @@ class MainWindow(QMainWindow):
         self.ui.methodsComboBox.addItem('Гаусса-Зейделя')
         self.ui.methodsComboBox.addItem('Хукка-Дживса')
         self.ui.methodsComboBox.addItem('Антиградиент')
+        self.ui.methodsComboBox.addItem('Ньютона')
 
-        self.methods_dict = {'Имитации отжига': 0, 'Гаусса-Зейделя': 1, 'Хукка-Дживса': 2, 'Антиградиент': 3}
+        self.methods_dict = {'Имитации отжига': 0, 'Гаусса-Зейделя': 1, 'Хукка-Дживса': 2, 'Антиградиент': 3, 'Ньютона': 4}
         self.method_name = 'Имитации отжига'
 
         self.ui.methodsComboBox.activated.connect(self.updateMethodsComboBox)
