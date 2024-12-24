@@ -14,6 +14,7 @@ import reliase
 from reliase import Attempt, get_all_elements, crash, Experiment, add_attempt
 from methods import *
 from calc import *
+import from_file_imports
 import functions
 
 
@@ -63,58 +64,6 @@ class AttemptWidget(QWidget):
         self.attempt.add_into_global_bd()
 
 
-# окно для поиска экспериментов
-class FindExperimentWindow(QMainWindow):
-    def __init__(self):
-        super().__init__()
-
-        self.ui = uic.loadUi('ui/FindExperimentWindow.ui', self)
-        self.ui.find_button.clicked.connect(self.find_button_clicked)
-        self.ui.swap_button.clicked.connect(self.swap_button_clicked)
-
-    # # обработка нажатия на кнопку "Найти"
-    # def find_button_clicked(self):
-    #     first_hashtag_request = self.ui.lineEdit.text()
-    #     second_hashtag_request = self.ui.lineEdit_2.text()
-    #     first_list_elements = reliase.find_as_hashtag(first_hashtag_request)
-    #     second_list_elements = reliase.find_as_hashtag(second_hashtag_request)
-    #     experiments = reliase.find_experiments(first_list_elements, second_list_elements)
-    #
-    #     self.ui.experimentsTab.setRowCount(0)
-    #     self.ui.experimentsTab.setRowCount(10)
-    #
-    #     if len(experiments) == 0:
-    #         msg = QMessageBox()
-    #         msg.setIcon(QMessageBox.Critical)
-    #         msg.setText("Ошибка")
-    #         msg.setInformativeText('Элементов с такими характеристиками не найдено')
-    #         msg.setWindowTitle("Error")
-    #         msg.exec_()
-    #
-    #
-    #     for i in range(0, len(experiments)):
-    #         self.ui.experimentsTab.insertRow(self.ui.experimentsTab.rowCount())
-    #         exp_arr = json.loads(experiments[i]['source_data'])
-    #         # x2, y1, y2, GEJ, PkPa, dPPa
-    #         self.ui.experimentsTab.setItem(i, 0, QTableWidgetItem(experiments[i]['first_element']))
-    #         self.ui.experimentsTab.setItem(i, 1, QTableWidgetItem(experiments[i]['second_element']))
-    #         self.ui.experimentsTab.setItem(i, 2, QTableWidgetItem(str(experiments[i]['temperature'])))
-    #         self.ui.experimentsTab.setItem(i, 3, QTableWidgetItem(crash(exp_arr['x2'])))
-    #         self.ui.experimentsTab.setItem(i, 4, QTableWidgetItem(crash(exp_arr['PkPa'])))
-    #         self.ui.experimentsTab.setItem(i, 5, QTableWidgetItem(crash(exp_arr['dPPa'])))
-    #         self.ui.experimentsTab.setItem(i, 6, QTableWidgetItem(crash(exp_arr['y1'])))
-    #         self.ui.experimentsTab.setItem(i, 7, QTableWidgetItem(crash(exp_arr['y2'])))
-    #         self.ui.experimentsTab.setItem(i, 8, QTableWidgetItem(crash(exp_arr['GEJ'])))
-    #         self.ui.experimentsTab.setItem(i, 9, QTableWidgetItem(str(experiments[i]['article'])))
-    #
-    # # обработка нажатия на кнопку "<->"
-    # def swap_button_clicked(self):
-    #     first_string = self.ui.lineEdit.text()
-    #     second_string = self.ui.lineEdit_2.text()
-    #     self.ui.lineEdit_2.setText(first_string)
-    #     self.ui.lineEdit.setText(second_string)
-
-
 # окно для добавления экспериментов
 class AddExperimentWindow(QMainWindow):
     def __init__(self):
@@ -161,79 +110,6 @@ class AddExperimentWindow(QMainWindow):
             self.ui.error_label.setText("Не все поля заполнены")
 
 
-# окно для расчетов и построения графиков
-class CalculateDialog(QDialog):
-    def __init__(self, id_exp: int):
-        super().__init__()
-
-        self.ui = uic.loadUi('ui/CalculateDialog.ui', self)
-
-        self.ui.calculate_button.clicked.connect(self.calculate_button_clicked)
-        self.ui.graph_button.clicked.connect(self.draw_chart)
-        self.ui.comboBox.addItem('Имитации отжига')
-        self.ui.comboBox.addItem('Гаусса-Зейделя')
-        self.ui.comboBox.addItem('Хукка-Дживса')
-        self.ui.comboBox.addItem('Антиградиент')
-
-        self.methods_dict = {'Имитации отжига': 0, 'Гаусса-Зейделя': 1, 'Хукка-Дживса': 2, 'Антиградиент': 3}
-        self.method_name = 'Имитации отжига'
-
-        self.ui.comboBox.activated.connect(self.update_combo_box)
-
-        self.id_exp = id_exp
-
-
-    # функция для обновления названия используемого метода в comboBox
-    def update_combo_box(self):
-        self.method_name = self.ui.comboBox.currentText()
-
-    # обработка нажатия кнопки "Рассчитать"
-    def calculate_button_clicked(self):
-        try:
-            if self.checking_input():
-                a12 = int(self.ui.A12_init_edit.text())
-                a21 = int(self.ui.A21_init_edit.text())
-                id_exp = self.id_exp
-
-
-                a12_new, a21_new = simple_calculation(id_exp, a12, a21, self.methods_dict[self.method_name])
-                self.ui.A12_output_edit.setText(str(a12_new))
-                self.ui.A21_output_edit.setText(str(a21_new))
-
-                func = functions.function('<margulis>')
-                attempt = reliase.Attempt(id_exp, func, self.methods_dict[self.method_name], {'a12': a12, 'a21': a21}, {'a12': a12_new, 'a21': a21_new})
-                attempt.add_into_global_bd()
-            else:
-                self.error_message()
-        except Exception as ex:
-            print(ex)
-
-    # обработка нажатия кнопки "Построить график"
-    def draw_chart(self):
-        try:
-            if self.checking_input():
-                id_exp = self.id_exp
-                method = MethodOfSimulatedAnnealing(id_exp)
-                method.draw_chart()
-            else:
-                self.error_message()
-        except Exception as ex:
-            print(ex)
-
-    # функция для проверки корректности ввода данных пользователем
-    def checking_input(self):
-        return self.ui.A12_init_edit.text().isdigit() and self.ui.A21_init_edit.text().isdigit()
-
-    # функция вызова предупреждения об ошибке в случае некорректного ввода
-    @staticmethod
-    def error_message():
-        msg = QMessageBox()
-        msg.setIcon(QMessageBox.Critical)
-        msg.setText("Ошибка ввода")
-        msg.setInformativeText('Некорректный ввод')
-        msg.setWindowTitle("Сообщение об ошибке")
-        msg.exec_()
-
 
 # окно с информацией об эксперименте
 class ExperimentInfoDialog(QDialog):
@@ -261,17 +137,38 @@ class FiltersDialog(QDialog):
 
 
 # окно для открытия файла для импорта данных эксперимента
-class importExperimentDialog(QDialog):
+class ImportExperimentDialog(QDialog):
     def __init__(self):
         super().__init__()
-        self.ui = uic.loadUi('ui/ImportExperimentDialog.ui')
+        self.ui = uic.loadUi('ui/ImportExperimentDialog.ui', self)
         self.ui.fileDialogButton.clicked.connect(self.open_path_dialog)
+        self.ui.addButton.clicked.connect(self.add_button_clicked)
 
 
     def open_path_dialog(self):
         options = QFileDialog.Options()
-        fileName, _ = QFileDialog.getOpenFileName(self, "Выберите файл", "", "All Files (*);;Text Files (*.txt)", options=options)
-        print(fileName)
+        fileName, _ = QFileDialog.getOpenFileName(self, "Выберите файл", "", "All Files (*.csv *.xlsx);;CSV Files (*.csv);;Excel Files (*.xlsx)", options=options)
+        self.ui.pathLineEdit.setText(fileName)
+    
+    def correct_file_directory_check(self, file_path: str) -> bool:
+        import os.path
+        return os.path.exists(file_path)
+
+    def add_button_clicked(self):
+        if self.correct_file_directory_check(self.ui.pathLineEdit.text()):
+            exp = from_file_imports.get_experiment_from_csv(self.ui.pathLineEdit.text())
+            exp.add_into_db()
+        else:
+            self.file_path_error()
+    
+    def file_path_error(self):
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Critical)
+        msg.setText("Некорректный путь к файлу")
+        msg.setInformativeText('Путь к файлу введен неверно или файла с таким путем не существует')
+        msg.setWindowTitle("Сообщение об ошибке")
+        msg.exec_()
+
 
 
 #   ОСНОВНОЕ ОКНО   ##################################################################################################################################################
@@ -375,21 +272,11 @@ class MainWindow(QMainWindow):
                 self.ui.experimentsTab.setCurrentCell(-1, 0)
                 self.current_row = -1
 
-    # добавление виджета с информацией о попытке расчета
-    def add_attempt_tab(self):
-        page = AttemptWidget()
-        self.ui.attemptsTabWidget.addTab(page, 'Tab n')
-        pass
-
-    # функция для обработки нажатия на кнопку "Найти" во вкладке Эксперименты
-    def find_button_clicked(self):
-        self.ui.find_window = FindExperimentWindow()
-        self.find_window.show()
 
     # функция для обработки нажатия на кнопку "Добавить" во вкладке Эксперименты
     def add_button_clicked(self):
-        self.ui.add_window = importExperimentDialog()
-        self.add_window.show()
+        add_window = ImportExperimentDialog()
+        add_window.exec()
 
 
     # вывод информации об статьях
@@ -424,7 +311,7 @@ class MainWindow(QMainWindow):
                     self.ui.id_exp_edit.setText(id_exp_string)
                 elif action == showAct:
                     d = ExperimentInfoDialog(id_exp)
-                    d.show()
+                    d.exec()
         except Exception as ex:
             print(ex)
 
