@@ -9,8 +9,8 @@ def create_mysql_connection():
             host=host,
             port=3306,
             user=user_name,
-            password=password,
-            database=db_name,  # db_chem
+            password=input('Password: '),
+            database=db_name,
             cursorclass=pymysql.cursors.DictCursor
         )
         print("Connected ")
@@ -25,8 +25,6 @@ def create_sqlite_connection():
     try:
         connection = sqlite3.connect(sqlite_file_name)
         connection.row_factory = sqlite3.Row
-        print("Connected ")
-        print('#' * 80)
     except Exception as ex:
         print('Connection error......................')
         print(ex)

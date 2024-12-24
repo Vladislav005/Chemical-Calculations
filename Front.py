@@ -12,9 +12,8 @@ import matplotlib.pyplot as plt
 
 import reliase
 from reliase import Attempt, get_all_elements, crash, Experiment, add_attempt
-import methods
-from methods import MethodOfSimulatedAnnealing, MethodHookJeeves, MethodGaussZeidel, MethodAntigradient, MethodNewton
-from calc import simple_calculation, multi_start
+from methods import *
+from calc import *
 import functions
 
 
@@ -39,18 +38,7 @@ class AttemptWidget(QWidget):
         self.show_results()
 
     def drawChart(self):
-        method = None
-        match self.attempt.id_method:
-            case 0:
-                method = MethodOfSimulatedAnnealing(self.attempt.id_exp)
-            case 1:
-                method = MethodGaussZeidel(self.attempt.id_exp)
-            case 2:
-                method = MethodHookJeeves(self.attempt.id_exp)
-            case 3:
-                method = MethodAntigradient(self.attempt.id_exp)
-            case 4:
-                method = MethodNewton(self.attempt.id_exp)
+        method = get_method(self.attempt.func, self.attempt.id_method, self.attempt.id_exp)
         ax = self.figure.add_subplot(111)
         method.draw_chart(ax)
         self.canvas.draw()
@@ -403,26 +391,6 @@ class MainWindow(QMainWindow):
         self.ui.add_window = importExperimentDialog()
         self.add_window.show()
 
-    # функция для обработки нажатия на кнопку "Рассчитать"
-    def calculate_button_clicked(self):
-        try:
-            top_row = self.ui.experimentsTab.selectionModel().selectedRows()
-            #bottom_row = self.ui.experimentsTab.bottomRow()
-            #indexes = [i for i in self.ui.experimentsTab.selectedRows()]
-            rows = [i for i in range(self.ui.experimentsTab.currentRow() - len(self.ui.experimentsTab.selectionModel().selectedRows()) + 1, self.ui.experimentsTab.currentRow() + 1)]
-            id_exp = [int(self.ui.experimentsTab.item(row, 0).text()) for row in rows]
-            print(id_exp)
-        except Exception as ex:
-            print(ex)
-        try:
-            if self.current_row == -1:
-                QMessageBox.critical(self, "Ошибка ", "Выберите эксперимент для расчета", QMessageBox.Ok)
-            else:
-                id_exp = int(self.ui.experimentsTab.item(self.current_row, 0).text())
-                self.ui.calc_dialog = CalculateDialog(id_exp)
-                self.calc_dialog.show()
-        except Exception as ex:
-            print(ex)
 
     # вывод информации об статьях
     def show_articles(self):
@@ -471,6 +439,8 @@ class MainWindow(QMainWindow):
 
         self.methods_dict = {'Имитации отжига': 0, 'Гаусса-Зейделя': 1, 'Хукка-Дживса': 2, 'Антиградиент': 3, 'Ньютона': 4}
         self.method_name = 'Имитации отжига'
+
+        self.model = functions.margulis
 
         self.ui.methodsComboBox.activated.connect(self.updateMethodsComboBox)
         self.attemptsTabWidget.tabCloseRequested.connect(self.close_attempt_tab)
@@ -539,22 +509,20 @@ class MainWindow(QMainWindow):
                 for id_experiment in id_experiments.split(','):
                     id_exp = int(id_experiment)
 
-                    func = functions.Function('0')
-
                     if self.ui.multistartCheckBox.isChecked():
                         a12_min = float(self.ui.A12_min_edit.text())
                         a12_max = float(self.ui.A12_max_edit.text())
                         a21_min = float(self.ui.A21_min_edit.text())
                         a21_max = float(self.ui.A21_max_edit.text())
                         count = int(self.ui.count_edit.text())
-                        result = multi_start(id_exp, a12_min, a12_max, a21_min, a21_max, count, self.methods_dict[self.method_name])
-                        attempt = Attempt(id_exp, func, self.methods_dict[self.method_name],
+                        result = multi_start(id_exp, a12_min, a12_max, a21_min, a21_max, count, self.methods_dict[self.method_name], self.model)
+                        attempt = Attempt(id_exp, self.model, self.methods_dict[self.method_name],
                                           {'a12_min': a12_min, 'a12_max': a12_max, 'a21_min': a21_min, 'a21_max': a21_max}, {'result': result})
                     else:
                         a12 = float(self.ui.A12_init_edit.text())
                         a21 = float(self.ui.A21_init_edit.text())
-                        a12_new, a21_new = simple_calculation(id_exp, a12, a21, self.methods_dict[self.method_name])
-                        attempt = Attempt(id_exp, func, self.methods_dict[self.method_name], {'a12': a12, 'a21': a21}, {'a12': a12_new, 'a21': a21_new})
+                        a12_new, a21_new = simple_calculation(id_exp, a12, a21, self.methods_dict[self.method_name], self.model)
+                        attempt = Attempt(id_exp, self.model, self.methods_dict[self.method_name], {'a12': a12, 'a21': a21}, {'a12': a12_new, 'a21': a21_new})
                     page = AttemptWidget(attempt)
                     n = attempt.number
                     self.ui.attemptsTabWidget.addTab(page, f'Attempt {n}')
@@ -585,7 +553,6 @@ class MainWindow(QMainWindow):
 
 
 
-
 if __name__ == '__main__':
     app = QApplication(sys.argv)
 
@@ -593,3 +560,7 @@ if __name__ == '__main__':
     window.show()
 
     app.exec()
+
+
+
+# Hvwg wg bch hvs sbr, hvwg wg xigh hvs psuwbbwbu. Юноьантъ.

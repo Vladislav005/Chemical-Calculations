@@ -4,7 +4,6 @@ from config import user_name
 from db import create_connection
 from functions import Function
 
-# connection = create_mysql_connection()
 connection = create_connection()
 
 
@@ -14,6 +13,8 @@ class Experiment:
         self.second_element = second_element
         if pressure == None:
             pressure = 'NULL'
+        if temperature == None:
+            temperature = 'NULL'
         self.temperature = temperature
         self.pressure = pressure
         self.source_data = source_data
@@ -23,8 +24,8 @@ class Experiment:
     def add_into_db(self):
         cursor = connection.cursor()
         source_data_json = json.dumps(self.source_data)
-        insert_query = "INSERT INTO experiments (first_element, second_element, temperature, pressure, source_data, article) VALUES " \
-                       "('" + self.first_element + "', '" + self.second_element + "', " + str(self.temperature) + ", " + str(self.pressure) + ", '" + source_data_json + "', '" + str(self.article) + "');"
+        insert_query = f"INSERT INTO experiments (first_element, second_element, temperature, pressure, source_data, article) VALUES " \
+                       f"('{self.first_element}', '{self.second_element}', {str(self.temperature)}, {str(self.pressure)}, '{source_data_json}', '{str(self.article)}');"
         cursor.execute(insert_query)
         connection.commit()
 
@@ -37,7 +38,7 @@ class Element:
     # добавление элемента в бд
     def add_into_bd(self):
         cursor = connection.cursor()
-        insert_query = "INSERT INTO elements (name, specifications) VALUES ('" + self.name + "', '" + self.specifications_string + "');"
+        insert_query = f"INSERT INTO elements (name, specifications) VALUES ('{self.name}', '{self.specifications_string}');"
         cursor.execute(insert_query)
         connection.commit()
 
@@ -58,9 +59,9 @@ class Attempt:
             init_data = json.dumps(self.init)
             result_data = json.dumps(self.result)
             with (connection.cursor() as cursor):
-                insert_query = ("INSERT INTO attempts (experiment_id, func, method_id, init_data, result) "
-                                "VALUES (" + str(self.id_exp) + ", '" + self.func.get_string() + "', " + str(self.id_method) +
-                                ", '" + init_data + "', '" + result_data + "');")
+                insert_query = f"INSERT INTO attempts (experiment_id, func, method_id, init_data, result) "\
+                                f"VALUES ({str(self.id_exp)}, '{self.func.get_string()}', {str(self.id_method)}"\
+                                f", '{init_data}', '{result_data}');"
                 cursor.execute(insert_query)
                 connection.commit()
         except Exception as ex:
@@ -74,14 +75,12 @@ def crash(arr: list):
     s = s.replace('[','')
     s = s.replace(']','.')
     s = s.replace('\'', '')
-    # while (s[0] == ' ' or s[0] == ',' or s[0] == '\n'):
-    #     s = s[1:]
     return s
 
 # получение словаря со всеми данными из бд об элементах
 def get_all_elements(table_name: str):
     cursor =  connection.cursor()
-    select_all_rows = "SELECT * FROM " + table_name
+    select_all_rows = f"SELECT * FROM {table_name}"
     cursor.execute(select_all_rows)
     rows = cursor.fetchall()
     for i in range(len(rows)):
@@ -97,8 +96,8 @@ def add_attempt(id_exp: int, id_method: int, init: dict, result: dict):
         result_data = json.dumps(result)
         username = user_name
         cursor = connection.cursor()
-        insert_query = ("INSERT INTO attempts (username, experiment_id, method_id, initial_a1, initial_a2, result_a1, result_a2) "\
-                        "VALUES ('") + username + "', '" + str(id_exp) + "', '" + str(id_method) + "', '" + init_data + "', '" + result_data + "', '" + "');"
+        insert_query = f"INSERT INTO attempts (username, experiment_id, method_id, initial_a1, initial_a2, result_a1, result_a2) "\
+                        f"VALUES ('{username}', '{str(id_exp)}', '{str(id_method)}', '{init_data}', '{result_data}', '');"
         cursor.execute(insert_query)
         connection.commit()
     except Exception as ex:
@@ -107,29 +106,29 @@ def add_attempt(id_exp: int, id_method: int, init: dict, result: dict):
 # получение данных об эксперименте по его id
 def get_experiment_as_id(id_exp: int):
     cursor = connection.cursor()
-    select_query = f"SELECT * FROM experiments WHERE id == {id_exp}"
-    cursor.execute(select_query)
-    return dict(cursor.fetchone())
-
+    select_query = "SELECT * FROM experiments WHERE id = ?"
+    cursor.execute(select_query, (id_exp,))
+    row = cursor.fetchone()
+    return dict(row) if row else None
 
 
 
 # Для работы с базами данных вне классов
 def delete_experiment(id_exp: int):
     cursor = connection.cursor()
-    delete_query = "DELETE FROM experiments WHERE id = " + str(id_exp) + ";"
+    delete_query = f"DELETE FROM experiments WHERE id = {id_exp};"
     cursor.execute(delete_query)
     connection.commit()
 
 def add_article(name, author, year, link):
     cursor = connection.cursor()
-    insert_query = "INSERT INTO articles (name, author, year, link) VALUES ('" + name + "', '" + author + "', '" + str(year) + "', '" + link + "');"
+    insert_query = f"INSERT INTO articles (name, author, year, link) VALUES ('{name}', '{author}', '{str(year)}', '{link}');"
     cursor.execute(insert_query)
     connection.commit()
 
 def delete_article(num):
     cursor = connection.cursor()
-    delete_query = "DELETE FROM articles WHERE num = " + str(num) + ";"
+    delete_query = f"DELETE FROM articles WHERE num = {str(num)};"
     cursor.execute(delete_query)
     connection.commit()
 
@@ -147,7 +146,7 @@ def get_article_name(article_id:int):
 # извлечение ветки элемента из базы данных
 def get_branch(element_name: str)->list:
     cursor = connection.cursor()
-    select_query = f'SELECT branch FROM elements WHERE name = \'{element_name}\''
+    select_query = f"SELECT branch FROM elements WHERE name = '{element_name}'"
     cursor.execute(select_query)
     branch = cursor.fetchall()
     return branch[0]['branch'].split(';')[:-1]
