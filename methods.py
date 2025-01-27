@@ -29,12 +29,11 @@ class Method(abc.ABC):
         return D(self.used_function.result(intial_params))
 
     def margulis(self, a1, a2, x, temp):
-        #return 8.31 * temp * x * (1 - x) * ((1 - x) * a1 + a2 * x)
-        #return functions.margulis.result({'a1': a1, 'a2': a2, 'x': x, 'temp': temp})
-        return Function.margulis(a1, a2, x, temp)
+        return R * D(temp) * D(x) * (1 - D(x)) * ((1 - D(x)) * D(a1) + D(a2) * D(x))
 
     def minimum(self, gej, a1, a2, x, temp):
         return (gej - self.model_result({'a1': float(a1), 'a2': float(a2), 'x': float(x), 'temp': float(temp)})) ** 2
+        #return (gej - self.margulis(a1, a2, x, temp)) ** 2
 
     def minimum_sum(self, arr, a1, a2):
         summ = 0
@@ -372,6 +371,10 @@ def get_method(used_function: Function = None, method_num: int = 0, id_exp: int 
 
 
 if __name__ == '__main__':
+    method = MethodOfSimulatedAnnealing(1, functions.margulis)
+    a12, a21, minimum = method.calculate(0, 0)
+    print(a12,a21,minimum)
+
     method = MethodGaussZeidel(1, functions.margulis)
     a12, a21, minimum = method.calculate(0, 0)
     print(a12,a21,minimum)

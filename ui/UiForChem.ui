@@ -41,7 +41,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>3</number>
+       <number>1</number>
       </property>
       <property name="iconSize">
        <size>
@@ -393,7 +393,7 @@
       </widget>
       <widget class="QWidget" name="tab_2">
        <attribute name="title">
-        <string>Таблица элементов</string>
+        <string>Таблица веществ</string>
        </attribute>
        <layout class="QGridLayout" name="gridLayout_2">
         <item row="0" column="1" rowspan="2">
@@ -408,7 +408,7 @@
                </font>
               </property>
               <property name="text">
-               <string>Таблица химических элементов</string>
+               <string>Таблица веществ</string>
               </property>
              </widget>
             </item>
@@ -482,7 +482,7 @@
                </size>
               </property>
               <property name="text">
-               <string>Добавить элемент</string>
+               <string>Добавить</string>
               </property>
              </widget>
             </item>

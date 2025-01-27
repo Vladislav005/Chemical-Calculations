@@ -28,7 +28,7 @@ class AttemptWidget(QWidget):
 
         self.attempt = attempt
 
-        self.ui.addAttemptButton.clicked.connect(self.addAttempt)
+        #self.ui.addAttemptButton.clicked.connect(self.addAttempt)
 
         self.figure = plt.figure()
         self.canvas = FigureCanvas(self.figure)
