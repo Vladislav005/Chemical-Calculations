@@ -18,7 +18,6 @@ import from_file_imports
 import functions
 
 
-
 # виджет попыток
 class AttemptWidget(QWidget):
     def __init__(self, attempt: Attempt):
@@ -178,6 +177,9 @@ class MainWindow(QMainWindow):
 
         self.ui = uic.loadUi('ui/UiForChem.ui', self)
 
+        self.EXP_PAGE_NUM = 0
+        self.ATTEMPT_PAGE_NUM = 3
+
         # для экспериментов
         self.ui.add_button.clicked.connect(self.add_button_clicked)
         self.ui.update_button_experiments.clicked.connect(self.update_table_experiments)
@@ -288,6 +290,7 @@ class MainWindow(QMainWindow):
             self.articles_list.addItem(item['link'])
             self.articles_list.addItem('')
 
+    # Контекстное меню во вкладке эксперименты
     def contextMenuEvent(self, event):
         try:
             top_row = self.ui.experimentsTab.selectionModel().selectedRows()
@@ -301,13 +304,13 @@ class MainWindow(QMainWindow):
             item = self.ui.experimentsTab.itemAt(event.pos())
             #now_current_row = self.ui.experimentsTab.currentRow()
             self.clicked_on_experiments_tab()
-            if self.ui.tabWidget.currentIndex() == 1 and self.current_row != -1:
+            if self.ui.tabWidget.currentIndex() == self.EXP_PAGE_NUM and self.current_row != -1:
                 contextMenu = QMenu(self)
                 calcAct = contextMenu.addAction("Рассчитать")
                 showAct = contextMenu.addAction("Информация")
                 action = contextMenu.exec_(self.mapToGlobal(event.pos()))
                 if action == calcAct:
-                    self.ui.tabWidget.setCurrentIndex(4)
+                    self.ui.tabWidget.setCurrentIndex(self.ATTEMPT_PAGE_NUM)
                     self.ui.id_exp_edit.setText(id_exp_string)
                 elif action == showAct:
                     d = ExperimentInfoDialog(id_exp)
@@ -315,7 +318,7 @@ class MainWindow(QMainWindow):
         except Exception as ex:
             print(ex)
 
-
+    # Создание страницы рассчета
     def makeCalculatePage(self):
         self.ui.calculateButton.clicked.connect(self.calculateButton_clicked)
         self.ui.methodsComboBox.addItem('Имитации отжига')
@@ -338,6 +341,7 @@ class MainWindow(QMainWindow):
         self.ui.multistartCheckBox.stateChanged.connect(self.multistartCheckBoxChanged)
         self.turn_visibility(visibility=True)
 
+    # Изменение видимости полей на странице рассчета
     def turn_visibility(self, visibility: bool = True):
         self.ui.label_9.setEnabled(visibility)
         self.ui.label_10.setEnabled(visibility)
@@ -354,12 +358,14 @@ class MainWindow(QMainWindow):
         self.ui.A21_max_edit.setEnabled(not visibility)
         self.ui.count_edit.setEnabled(not visibility)
 
+    # Переключение на мультизапуск и обратно
     def multistartCheckBoxChanged(self):
         if self.ui.multistartCheckBox.isChecked():
             self.turn_visibility(visibility=False)
         else:
             self.turn_visibility(visibility=True)
 
+    # Изменение methodsComboBox
     def updateMethodsComboBox(self):
         self.method_name = self.ui.methodsComboBox.currentText()
 
@@ -371,6 +377,7 @@ class MainWindow(QMainWindow):
                 return False
         return True
 
+    # Проверка на корректность ввода данных
     def checking_input(self):
         if self.ui.multistartCheckBox.isChecked():
             return (self.ui.A12_min_edit.text().isdigit() and self.ui.A12_max_edit.text().isdigit() and
@@ -388,6 +395,7 @@ class MainWindow(QMainWindow):
         msg.setWindowTitle("Сообщение об ошибке")
         msg.exec_()
 
+    # Обработка нажатия кнопки Добавить
     def calculateButton_clicked(self):
         try:
             if self.checking_input():
@@ -412,22 +420,24 @@ class MainWindow(QMainWindow):
                         attempt = Attempt(id_exp, self.model, self.methods_dict[self.method_name], {'a12': a12, 'a21': a21}, {'a12': a12_new, 'a21': a21_new})
                     page = AttemptWidget(attempt)
                     n = attempt.number
-                    self.ui.attemptsTabWidget.addTab(page, f'Attempt {n}')
+                    self.ui.attemptsTabWidget.addTab(page, f'Расчёт {n}')
                     self.ui.attemptsTabWidget.setCurrentIndex(self.ui.attemptsTabWidget.count() - 1)
             else:
                 self.error_message()
         except Exception as ex:
             print(ex)
 
+    # Закрытие вкладки расчета
     def close_attempt_tab(self, index):
         self.attemptsTabWidget.removeTab(index)
 
-
+    # Обработка нажатия на кнопку Найти
     def filterButton_clicked(self):
         first_element_filter = self.ui.firstElementEdit.text()
         second_element_filter = self.ui.secondElementEdit.text()
         self.create_table_experiments(first_element_filter=first_element_filter, second_element_filter=second_element_filter)
 
+    # Обработка нажатия на кнопку замены местами названий первого и второго веществ
     def swapButtonClicked(self):
         first_element = self.ui.firstElementEdit.text()
         second_element = self.ui.secondElementEdit.text()
