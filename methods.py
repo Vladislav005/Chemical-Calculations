@@ -333,7 +333,7 @@ class MethodAntigradient(Method):
             x0, y0 = xn, yn
             xn = D(x0 - lam * self.df_dx(x0, y0))
             yn = D(y0 - lam2 * self.df_dy(x0, y0))
-        return round(xn, 5), round(yn, 5), round(self.f(xn, yn), 5)
+        return float(round(xn, 5)), float(round(yn, 5)), float(round(self.f(xn, yn), 5))
 
 # метод Ньютона
 class MethodNewton(Method):
@@ -351,7 +351,7 @@ class MethodNewton(Method):
             InvH = self.H(x0, y0)
             xn = D(x0 - (self.df_dx(x0, y0) * InvH[0][0] + self.df_dy(x0, y0) * InvH[0][1]))
             yn = D(y0 - (self.df_dx(x0, y0) * InvH[1][0] + self.df_dy(x0, y0) * InvH[1][1]))
-        return round(xn, 5), round(yn, 5), round(self.f(xn, yn), 5)
+        return float(round(xn, 5)), float(round(yn, 5)), float(round(self.f(xn, yn), 5))
 
 
 def get_method(used_function: Function = None, method_num: int = 0, id_exp: int = 0):

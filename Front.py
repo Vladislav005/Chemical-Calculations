@@ -447,7 +447,3 @@ if __name__ == '__main__':
     window.show()
 
     app.exec()
-
-
-
-# Hvwg wg bch hvs sbr, hvwg wg xigh hvs psuwbbwbu. Юноьантъ.
