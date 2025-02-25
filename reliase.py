@@ -21,7 +21,7 @@ class Experiment:
         self.article = article
 
     # добавление эксперимента в бд
-    def add_into_db(self):
+    def addIntoDB(self):
         cursor = connection.cursor()
         source_data_json = json.dumps(self.source_data)
         insert_query = f"INSERT INTO experiments (first_element, second_element, temperature, pressure, source_data, article) VALUES " \
@@ -36,7 +36,7 @@ class Element:
         self.specifications_string = specifications_string
 
     # добавление элемента в бд
-    def add_into_bd(self):
+    def addIntoDB(self):
         cursor = connection.cursor()
         insert_query = f"INSERT INTO elements (name, specifications) VALUES ('{self.name}', '{self.specifications_string}');"
         cursor.execute(insert_query)
@@ -54,7 +54,7 @@ class Attempt:
         Attempt.count_attempts += 1
         self.number = Attempt.count_attempts
 
-    def add_into_global_bd(self):
+    def addIntoGlobalDB(self):
         try:
             init_data = json.dumps(self.init)
             result_data = json.dumps(self.result)
@@ -78,7 +78,7 @@ def crash(arr: list):
     return s
 
 # получение словаря со всеми данными из бд об элементах
-def get_all_elements(table_name: str):
+def getAllElements(table_name: str):
     cursor =  connection.cursor()
     select_all_rows = f"SELECT * FROM {table_name}"
     cursor.execute(select_all_rows)
@@ -89,7 +89,7 @@ def get_all_elements(table_name: str):
 
 
 # для добавления в бд информации о попытке расчета
-def add_attempt(id_exp: int, id_method: int, init: dict, result: dict):
+def addAttempt(id_exp: int, id_method: int, init: dict, result: dict):
     try:
         # init_a1, init_a2, result_a1, result_a2
         init_data = json.dumps(init)
@@ -104,7 +104,7 @@ def add_attempt(id_exp: int, id_method: int, init: dict, result: dict):
         print(ex)
 
 # получение данных об эксперименте по его id
-def get_experiment_as_id(id_exp: int):
+def getExperimentsAsID(id_exp: int):
     cursor = connection.cursor()
     select_query = "SELECT * FROM experiments WHERE id = ?"
     cursor.execute(select_query, (id_exp,))
@@ -114,25 +114,25 @@ def get_experiment_as_id(id_exp: int):
 
 
 # Для работы с базами данных вне классов
-def delete_experiment(id_exp: int):
+def deleteExperiments(id_exp: int):
     cursor = connection.cursor()
     delete_query = f"DELETE FROM experiments WHERE id = {id_exp};"
     cursor.execute(delete_query)
     connection.commit()
 
-def add_article(name, author, year, link):
+def addArticle(name, author, year, link):
     cursor = connection.cursor()
     insert_query = f"INSERT INTO articles (name, author, year, link) VALUES ('{name}', '{author}', '{str(year)}', '{link}');"
     cursor.execute(insert_query)
     connection.commit()
 
-def delete_article(num):
+def deleteArticle(num):
     cursor = connection.cursor()
     delete_query = f"DELETE FROM articles WHERE num = {str(num)};"
     cursor.execute(delete_query)
     connection.commit()
 
-def get_article_name(article_id:int):
+def getArticleName(article_id:int):
     cursor = connection.cursor()
     select_query = f'SELECT name FROM articles WHERE id = {article_id};'
     cursor.execute(select_query)
@@ -144,7 +144,7 @@ def get_article_name(article_id:int):
 
 
 # извлечение ветки элемента из базы данных
-def get_branch(element_name: str)->list:
+def getBranch(element_name: str)->list:
     cursor = connection.cursor()
     select_query = f"SELECT branch FROM elements WHERE name = '{element_name}'"
     cursor.execute(select_query)
@@ -152,7 +152,7 @@ def get_branch(element_name: str)->list:
     return branch[0]['branch'].split(';')[:-1]
 
 
-def get_ids_experiments_by_name(element_type: str)->list:
+def getIDsExperimentByName(element_type: str)->list:
     stree = search.SearchTree()
     stree.make_all_branch()
     elements = stree.get_elements(element_type)
@@ -174,7 +174,7 @@ def get_ids_experiments_by_name(element_type: str)->list:
             result.append(r['id'])
         return result
 
-def bring_to_normal_filter(filters:list):
+def bringToNormalFilter(filters:list):
     element_filter = filters.copy()
     for i in range(len(element_filter)):
         element = element_filter[i]
@@ -191,10 +191,10 @@ def bring_to_normal_filter(filters:list):
     
 
 
-def get_elements_list_by_filter(element_filter: str):
+def getElementsListByFilter(element_filter: str):
     from search import SEARCH_TREE
     filters_list = element_filter.split(' ')
-    filters_list = bring_to_normal_filter(filters_list)
+    filters_list = bringToNormalFilter(filters_list)
     returned_list = []
     is_except = False
     for f in filters_list:
@@ -260,4 +260,4 @@ def get_elements_list_by_filter(element_filter: str):
         #     cursor.execute(create_table_query)
 
 if __name__ == '__main__':
-    print(get_experiment_as_id(2))
+    print(getExperimentsAsID(2))

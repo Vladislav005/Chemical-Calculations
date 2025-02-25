@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 
 
 import reliase
-from reliase import Attempt, get_all_elements, crash, Experiment, add_attempt
+from reliase import Attempt, getAllElements, crash, Experiment, addAttempt
 from methods import *
 from calc import *
 import from_file_imports
@@ -34,8 +34,8 @@ class AttemptWidget(QWidget):
         self.ui.mainLayout.addWidget(self.canvas)
         self.drawChart()
 
-        self.show_inits()
-        self.show_results()
+        self.showInits()
+        self.showResults()
 
     def drawChart(self):
         method = get_method(self.attempt.func, self.attempt.id_method, self.attempt.id_exp)
@@ -43,12 +43,12 @@ class AttemptWidget(QWidget):
         method.draw_chart(ax)
         self.canvas.draw()
 
-    def show_inits(self):
+    def showInits(self):
         self.ui.initTextBrowser.append(f'№ Эксп.: {self.attempt.id_exp}')
         for item in self.attempt.init.items():
             self.ui.initTextBrowser.append(f'{item[0]}: {item[1]}')
 
-    def show_results(self):
+    def showResults(self):
         for item in self.attempt.result.items():
             if type(item[1]) == list:
                 for i in item[1]:
@@ -70,10 +70,10 @@ class AddExperimentWindow(QMainWindow):
 
         self.ui = uic.loadUi('ui/AddExperimentWindow.ui', self)
 
-        self.ui.add_button.clicked.connect(self.add_button_clicked)
+        self.ui.add_button.clicked.connect(self.addButtonClicked)
 
     # обработка нажатия кнопки "Добавить"
-    def add_button_clicked(self):
+    def addButtonClicked(self):
         first_element = self.ui.lineEdit.text()
         second_element = self.ui.lineEdit_2.text()
         temperature = self.ui.lineEdit_3.text()
@@ -122,7 +122,7 @@ class ExperimentInfoDialog(QDialog):
 
     def showInfo(self):
         for id_exp in self.id_experiments:
-            inform = reliase.get_experiment_as_id(id_exp)
+            inform = reliase.getExperimentAsID(id_exp)
             for item in inform.items():
                 self.ui.listWidget.addItem(f'{item[0]}: {item[1]}')
             self.ui.listWidget.addItem('\n')
@@ -140,27 +140,27 @@ class ImportExperimentDialog(QDialog):
     def __init__(self):
         super().__init__()
         self.ui = uic.loadUi('ui/ImportExperimentDialog.ui', self)
-        self.ui.fileDialogButton.clicked.connect(self.open_path_dialog)
-        self.ui.addButton.clicked.connect(self.add_button_clicked)
+        self.ui.fileDialogButton.clicked.connect(self.openPathDialog)
+        self.ui.addButton.clicked.connect(self.addButtonClicked)
 
 
-    def open_path_dialog(self):
+    def openPathDialog(self):
         options = QFileDialog.Options()
         fileName, _ = QFileDialog.getOpenFileName(self, "Выберите файл", "", "All Files (*.csv *.xlsx);;CSV Files (*.csv);;Excel Files (*.xlsx)", options=options)
         self.ui.pathLineEdit.setText(fileName)
     
-    def correct_file_directory_check(self, file_path: str) -> bool:
+    def correctFileDirectoryCheck(self, file_path: str) -> bool:
         import os.path
         return os.path.exists(file_path)
 
-    def add_button_clicked(self):
-        if self.correct_file_directory_check(self.ui.pathLineEdit.text()):
+    def addButtonClicked(self):
+        if self.correctFileDirectoryCheck(self.ui.pathLineEdit.text()):
             exp = from_file_imports.get_experiment_from_csv(self.ui.pathLineEdit.text())
             exp.add_into_db()
         else:
-            self.file_path_error()
+            self.filePathError()
     
-    def file_path_error(self):
+    def filePathError(self):
         msg = QMessageBox()
         msg.setIcon(QMessageBox.Critical)
         msg.setText("Некорректный путь к файлу")
@@ -181,13 +181,13 @@ class MainWindow(QMainWindow):
         self.ATTEMPT_PAGE_NUM = 3
 
         # для экспериментов
-        self.ui.add_button.clicked.connect(self.add_button_clicked)
-        self.ui.update_button_experiments.clicked.connect(self.update_table_experiments)
+        self.ui.add_button.clicked.connect(self.addButtonClicked)
+        self.ui.update_button_experiments.clicked.connect(self.updateTableExperiments)
         self.ui.filterButton.clicked.connect(self.filterButton_clicked)
         self.ui.swapButton.clicked.connect(self.swapButtonClicked)
 
-        self.create_table_experiments()
-        self.ui.experimentsTab.clicked.connect(self.clicked_on_experiments_tab)
+        self.createTableExperiments()
+        self.ui.experimentsTab.clicked.connect(self.clickedOnExperimentsTab)
 
         self.current_row = -1
 
@@ -195,23 +195,23 @@ class MainWindow(QMainWindow):
         self.makeCalculatePage()
 
         # для статей
-        self.show_articles()
+        self.showArticles()
 
         # для элементов
-        self.ui.update_button_elements.clicked.connect(self.create_table_elements)
+        self.ui.update_button_elements.clicked.connect(self.createTableElements)
 
-        self.create_table_elements()
+        self.createTableElements()
 
 
     # создание таблицы экспериментов
-    def create_table_experiments(self, first_element_filter: str = None, second_element_filter: str = None):
+    def createTableExperiments(self, first_element_filter: str = None, second_element_filter: str = None):
         if (first_element_filter == None or first_element_filter == ''):
             first_element_filter = 'Any'
         if (second_element_filter == None or second_element_filter == ''):
             second_element_filter = 'Any'
 
-        first_element_list = reliase.get_elements_list_by_filter(first_element_filter)
-        second_element_list = reliase.get_elements_list_by_filter(second_element_filter)
+        first_element_list = reliase.getElementsListByFilter(first_element_filter)
+        second_element_list = reliase.getElementsListByFilter(second_element_filter)
 
         self.ui.experimentsTab.setRowCount(0)
         self.ui.experimentsTab.setSelectionBehavior(QAbstractItemView.SelectRows) #  при нажатии на таблицу выделяется не ячейка, а выбранная строка целиком
@@ -223,7 +223,7 @@ class MainWindow(QMainWindow):
                     }
                     """)
 
-        experiments = get_all_elements('experiments')
+        experiments = getAllElements('experiments')
 
         j = 0
         for i in range(0, len(experiments)):
@@ -233,11 +233,13 @@ class MainWindow(QMainWindow):
                 self.ui.experimentsTab.setItem(j, 0, QTableWidgetItem(str(experiments[i]['id'])))
                 self.ui.experimentsTab.setItem(j, 1, QTableWidgetItem(experiments[i]['first_element']))
                 self.ui.experimentsTab.setItem(j, 2, QTableWidgetItem(experiments[i]['second_element']))
-                temperature = lambda: 'Not const' if str(experiments[i]['temperature']) == 'None' else str(experiments[i]['temperature'])
-                pressure = lambda: 'Not const' if str(experiments[i]['pressure']) == 'None' else str(experiments[i]['pressure'])
-                self.ui.experimentsTab.setItem(j, 3, QTableWidgetItem(temperature()))
-                self.ui.experimentsTab.setItem(j, 4, QTableWidgetItem(pressure()))
-                self.ui.experimentsTab.setItem(j, 5, QTableWidgetItem(reliase.get_article_name(experiments[i]['article'])))
+                process_type = 'ИЗОБАРНЫЙ' if str(experiments[i]['temperature']) == 'None' else 'ИЗОТЕРМИЧЕСКИЙ'
+                self.ui.experimentsTab.setItem(j, 3, QTableWidgetItem(process_type))
+                temperature = '-' if str(experiments[i]['temperature']) == 'None' else str(experiments[i]['temperature'])
+                pressure = '-' if str(experiments[i]['pressure']) == 'None' else str(experiments[i]['pressure'])
+                self.ui.experimentsTab.setItem(j, 4, QTableWidgetItem(temperature))
+                self.ui.experimentsTab.setItem(j, 5, QTableWidgetItem(pressure))
+                self.ui.experimentsTab.setItem(j, 6, QTableWidgetItem(reliase.getArticleName(experiments[i]['article'])))
                 j += 1
     
 
@@ -248,15 +250,15 @@ class MainWindow(QMainWindow):
         horizontalHeader.setSectionResizeMode(self.ui.experimentsTab.columnCount() - 1, QtWidgets.QHeaderView.Stretch)
 
     # обновление таблицы элементов
-    def update_table_experiments(self):
-        self.create_table_experiments()
+    def updateTableExperiments(self):
+        self.createTableExperiments()
 
     # создание таблицы элементов
-    def create_table_elements(self):
+    def createTableElements(self):
         self.ui.elementsTab.setRowCount(0)
         self.ui.elementsTab.setRowCount(1)
 
-        elements = get_all_elements('elements')
+        elements = getAllElements('elements')
         
         for i in range(0, len(elements)):
             self.ui.elementsTab.insertRow(self.ui.elementsTab.rowCount())
@@ -265,7 +267,7 @@ class MainWindow(QMainWindow):
             self.ui.elementsTab.setItem(i, 1, QTableWidgetItem(crash(spec_arr)))
 
     # обработка нажатия на таблицу экспериментов
-    def clicked_on_experiments_tab(self, event = None):
+    def clickedOnExperimentsTab(self, event = None):
         if self.current_row != self.ui.experimentsTab.currentRow():
             self.current_row = self.ui.experimentsTab.currentRow()
         else:
@@ -276,14 +278,14 @@ class MainWindow(QMainWindow):
 
 
     # функция для обработки нажатия на кнопку "Добавить" во вкладке Эксперименты
-    def add_button_clicked(self):
+    def addButtonClicked(self):
         add_window = ImportExperimentDialog()
         add_window.exec()
 
 
     # вывод информации об статьях
-    def show_articles(self):
-        items = get_all_elements('articles')
+    def showArticles(self):
+        items = getAllElements('articles')
         for item in items:
             item_string = 'Имя: ' +  item['name'] + '\n' + 'Автор: ' + item['author'] + '\n' + 'Год издания: ' + str(item['year'])
             self.articles_list.addItem(item_string)
@@ -303,7 +305,7 @@ class MainWindow(QMainWindow):
 
             item = self.ui.experimentsTab.itemAt(event.pos())
             #now_current_row = self.ui.experimentsTab.currentRow()
-            self.clicked_on_experiments_tab()
+            self.clickedOnExperimentsTab()
             if self.ui.tabWidget.currentIndex() == self.EXP_PAGE_NUM and self.current_row != -1:
                 contextMenu = QMenu(self)
                 calcAct = contextMenu.addAction("Рассчитать")
@@ -333,16 +335,16 @@ class MainWindow(QMainWindow):
         self.model = functions.margulis
 
         self.ui.methodsComboBox.activated.connect(self.updateMethodsComboBox)
-        self.attemptsTabWidget.tabCloseRequested.connect(self.close_attempt_tab)
+        self.attemptsTabWidget.tabCloseRequested.connect(self.closeAttemptTab)
 
         self.ui.attemptsTabWidget.removeTab(0)
         self.ui.attemptsTabWidget.removeTab(0)
 
         self.ui.multistartCheckBox.stateChanged.connect(self.multistartCheckBoxChanged)
-        self.turn_visibility(visibility=True)
+        self.turnVisibility(visibility=True)
 
     # Изменение видимости полей на странице рассчета
-    def turn_visibility(self, visibility: bool = True):
+    def turnVisibility(self, visibility: bool = True):
         self.ui.label_9.setEnabled(visibility)
         self.ui.label_10.setEnabled(visibility)
         self.ui.A12_init_edit.setEnabled(visibility)
@@ -361,16 +363,16 @@ class MainWindow(QMainWindow):
     # Переключение на мультизапуск и обратно
     def multistartCheckBoxChanged(self):
         if self.ui.multistartCheckBox.isChecked():
-            self.turn_visibility(visibility=False)
+            self.turnVisibility(visibility=False)
         else:
-            self.turn_visibility(visibility=True)
+            self.turnVisibility(visibility=True)
 
     # Изменение methodsComboBox
     def updateMethodsComboBox(self):
         self.method_name = self.ui.methodsComboBox.currentText()
 
     # функция для проверки корректности ввода данных пользователем
-    def checking_experiments_number_input(self):
+    def checkingExperimentsNumberImput(self):
         id_experiments = self.ui.id_exp_edit.text()
         for i in id_experiments:
             if i not in '0123456789, ':
@@ -378,16 +380,16 @@ class MainWindow(QMainWindow):
         return True
 
     # Проверка на корректность ввода данных
-    def checking_input(self):
+    def checkingInput(self):
         if self.ui.multistartCheckBox.isChecked():
             return (self.ui.A12_min_edit.text().isdigit() and self.ui.A12_max_edit.text().isdigit() and
                     self.ui.A21_min_edit.text().isdigit() and self.ui.A21_max_edit.text().isdigit() and
-                    self.ui.count_edit.text().isdigit() and self.checking_experiments_number_input())
-        return self.ui.A12_init_edit.text().isdigit() and self.ui.A21_init_edit.text().isdigit() and self.checking_experiments_number_input()
+                    self.ui.count_edit.text().isdigit() and self.checkingExperimentsNumberImput())
+        return self.ui.A12_init_edit.text().isdigit() and self.ui.A21_init_edit.text().isdigit() and self.checkingExperimentsNumberImput()
 
     # функция вызова предупреждения об ошибке в случае некорректного ввода
     @staticmethod
-    def error_message():
+    def errorMessage():
         msg = QMessageBox()
         msg.setIcon(QMessageBox.Critical)
         msg.setText("Ошибка ввода")
@@ -398,7 +400,7 @@ class MainWindow(QMainWindow):
     # Обработка нажатия кнопки Добавить
     def calculateButton_clicked(self):
         try:
-            if self.checking_input():
+            if self.checkingInput():
                 id_experiments = self.ui.id_exp_edit.text()
                 id_experiments.replace(' ', '')
                 for id_experiment in id_experiments.split(','):
@@ -423,19 +425,19 @@ class MainWindow(QMainWindow):
                     self.ui.attemptsTabWidget.addTab(page, f'Расчёт {n}')
                     self.ui.attemptsTabWidget.setCurrentIndex(self.ui.attemptsTabWidget.count() - 1)
             else:
-                self.error_message()
+                self.errorMessage()
         except Exception as ex:
             print(ex)
 
     # Закрытие вкладки расчета
-    def close_attempt_tab(self, index):
+    def closeAttemptTab(self, index):
         self.attemptsTabWidget.removeTab(index)
 
     # Обработка нажатия на кнопку Найти
     def filterButton_clicked(self):
         first_element_filter = self.ui.firstElementEdit.text()
         second_element_filter = self.ui.secondElementEdit.text()
-        self.create_table_experiments(first_element_filter=first_element_filter, second_element_filter=second_element_filter)
+        self.createTableExperiments(first_element_filter=first_element_filter, second_element_filter=second_element_filter)
 
     # Обработка нажатия на кнопку замены местами названий первого и второго веществ
     def swapButtonClicked(self):

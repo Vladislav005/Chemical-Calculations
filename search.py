@@ -33,7 +33,7 @@ class SearchTree:
                 node.add_child(new_node)
 
     def make_all_branch(self):
-        rows = reliase.get_all_elements('elements')
+        rows = reliase.getAllElements('elements')
         for row in rows:
             branch = row['branch'].split(';')[:-1] + [[row['name']]]
             self.add_branch(branch)

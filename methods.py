@@ -21,7 +21,7 @@ class Method(abc.ABC):
     def __init__(self, id_exp: int, used_function: Function):
         self.id_exp = id_exp
         self.used_function = used_function
-        self.experiment_data = reliase.get_experiment_as_id(id_exp)
+        self.experiment_data = reliase.getExperimentsAsID(id_exp)
         self.data = self.make_list(self.id_exp)
         self.temp = D(self.experiment_data['temperature'])
     
@@ -49,7 +49,7 @@ class Method(abc.ABC):
 
     @staticmethod
     def make_list(id_exp):
-        experiment = reliase.get_experiment_as_id(id_exp)
+        experiment = reliase.getExperimentsAsID(id_exp)
         source_data = json.loads(experiment['source_data'])
         result = []
         for i in range(min(len(source_data['x2']), len(source_data['GEJ']))):
@@ -131,7 +131,7 @@ class Method(abc.ABC):
         a12 = otz[0]
         a21 = otz[1]
 
-        t = reliase.get_experiment_as_id(self.id_exp)['temperature']
+        t = reliase.getExperimentsAsID(self.id_exp)['temperature']
         x = []
         i = arr[0][0]
         while i < arr[len(arr) - 1][0]:
