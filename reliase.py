@@ -1,8 +1,8 @@
 import json
 
-from config import user_name
-from db import create_connection
-from functions import Function
+from config.config import user_name
+from storage.db import create_connection
+from maths.functions import Function
 
 connection = create_connection()
 
@@ -192,7 +192,7 @@ def bringToNormalFilter(filters:list):
 
 
 def getElementsListByFilter(element_filter: str):
-    from search import SEARCH_TREE
+    from search.search import SEARCH_TREE
     filters_list = element_filter.split(' ')
     filters_list = bringToNormalFilter(filters_list)
     returned_list = []
@@ -258,6 +258,3 @@ def getElementsListByFilter(element_filter: str):
         #                          "year int, "\
         #                          "link varchar(128), PRIMARY KEY(id));"
         #     cursor.execute(create_table_query)
-
-if __name__ == '__main__':
-    print(getExperimentsAsID(2))

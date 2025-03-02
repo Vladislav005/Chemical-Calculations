@@ -1,21 +1,16 @@
 import sys
-from PyQt5.QtGui import QTextTable, QPalette
-from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QDialog, QVBoxLayout, QLabel, QTableWidget, QWidget, \
-    QLineEdit, QHBoxLayout, QTabWidget, QTableWidgetItem, QMessageBox, QMenu, QAbstractItemView, QToolBox, QFileDialog
-from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QApplication, QMainWindow, QDialog, QVBoxLayout, QLabel, QTableWidget, QWidget, \
+     QTableWidgetItem, QMessageBox, QMenu, QAbstractItemView, QFileDialog
 from PyQt5 import uic, QtWidgets
 import json
-import random
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 import matplotlib.pyplot as plt
 
 
 import reliase
 from reliase import Attempt, getAllElements, crash, Experiment, addAttempt
-from methods import *
-from calc import *
-import from_file_imports
-import functions
+from maths.methods import *
+from maths.calc import *
 
 
 # виджет попыток
@@ -332,7 +327,7 @@ class MainWindow(QMainWindow):
         self.methods_dict = {'Имитации отжига': 0, 'Гаусса-Зейделя': 1, 'Хукка-Дживса': 2, 'Антиградиент': 3, 'Ньютона': 4}
         self.method_name = 'Имитации отжига'
 
-        self.model = functions.margulis
+        self.model = maths.functions.margulis
 
         self.ui.methodsComboBox.activated.connect(self.updateMethodsComboBox)
         self.attemptsTabWidget.tabCloseRequested.connect(self.closeAttemptTab)
