@@ -1,0 +1,6 @@
+README.md
+setup.py
+chemical_calculations.egg-info/PKG-INFO
+chemical_calculations.egg-info/SOURCES.txt
+chemical_calculations.egg-info/dependency_links.txt
+chemical_calculations.egg-info/top_level.txt
