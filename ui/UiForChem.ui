@@ -41,7 +41,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>3</number>
       </property>
       <property name="iconSize">
        <size>
@@ -561,12 +561,12 @@
                  <item>
                   <widget class="QLabel" name="label_13">
                    <property name="text">
-                    <string>Функция</string>
+                    <string>Модель</string>
                    </property>
                   </widget>
                  </item>
                  <item>
-                  <widget class="QComboBox" name="comboBox_2">
+                  <widget class="QComboBox" name="modelComboBox">
                    <property name="minimumSize">
                     <size>
                      <width>0</width>
@@ -616,58 +616,32 @@
                 </layout>
                </item>
                <item>
+                <widget class="QLabel" name="label_2">
+                 <property name="text">
+                  <string>Начальные данные:</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
                 <layout class="QVBoxLayout" name="verticalLayout_6">
                  <item>
                   <layout class="QGridLayout" name="gridLayout_3">
-                   <item row="1" column="0">
-                    <widget class="QLabel" name="label_10">
-                     <property name="text">
-                      <string>A21</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="0" column="1">
-                    <widget class="QLineEdit" name="A12_init_edit">
-                     <property name="minimumSize">
-                      <size>
-                       <width>0</width>
-                       <height>30</height>
-                      </size>
-                     </property>
-                     <property name="maximumSize">
-                      <size>
-                       <width>100</width>
-                       <height>16777215</height>
-                      </size>
-                     </property>
-                     <property name="text">
-                      <string>0</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="1" column="1">
-                    <widget class="QLineEdit" name="A21_init_edit">
-                     <property name="minimumSize">
-                      <size>
-                       <width>0</width>
-                       <height>30</height>
-                      </size>
-                     </property>
-                     <property name="maximumSize">
-                      <size>
-                       <width>100</width>
-                       <height>16777215</height>
-                      </size>
-                     </property>
-                     <property name="text">
-                      <string>0</string>
-                     </property>
-                    </widget>
-                   </item>
                    <item row="0" column="0">
-                    <widget class="QLabel" name="label_9">
+                    <widget class="QLineEdit" name="init_edit">
+                     <property name="minimumSize">
+                      <size>
+                       <width>100</width>
+                       <height>30</height>
+                      </size>
+                     </property>
+                     <property name="maximumSize">
+                      <size>
+                       <width>500</width>
+                       <height>16777215</height>
+                      </size>
+                     </property>
                      <property name="text">
-                      <string>A12</string>
+                      <string/>
                      </property>
                     </widget>
                    </item>

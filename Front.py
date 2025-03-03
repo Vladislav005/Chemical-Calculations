@@ -6,9 +6,9 @@ import json
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 import matplotlib.pyplot as plt
 
-
-import reliase
-from reliase import Attempt, getAllElements, crash, Experiment, addAttempt
+import storage
+import foundation.basis
+from foundation.basis import Attempt, getAllElements, crash, Experiment, addAttempt
 from maths.methods import *
 from maths.calc import *
 
@@ -117,7 +117,7 @@ class ExperimentInfoDialog(QDialog):
 
     def showInfo(self):
         for id_exp in self.id_experiments:
-            inform = reliase.getExperimentAsID(id_exp)
+            inform = foundation.basis.getExperimentAsID(id_exp)
             for item in inform.items():
                 self.ui.listWidget.addItem(f'{item[0]}: {item[1]}')
             self.ui.listWidget.addItem('\n')
@@ -150,7 +150,7 @@ class ImportExperimentDialog(QDialog):
 
     def addButtonClicked(self):
         if self.correctFileDirectoryCheck(self.ui.pathLineEdit.text()):
-            exp = from_file_imports.get_experiment_from_csv(self.ui.pathLineEdit.text())
+            exp = storage.from_file_imports.get_experiment_from_csv(self.ui.pathLineEdit.text())
             exp.add_into_db()
         else:
             self.filePathError()
@@ -205,8 +205,8 @@ class MainWindow(QMainWindow):
         if (second_element_filter == None or second_element_filter == ''):
             second_element_filter = 'Any'
 
-        first_element_list = reliase.getElementsListByFilter(first_element_filter)
-        second_element_list = reliase.getElementsListByFilter(second_element_filter)
+        first_element_list = foundation.basis.getElementsListByFilter(first_element_filter)
+        second_element_list = foundation.basis.getElementsListByFilter(second_element_filter)
 
         self.ui.experimentsTab.setRowCount(0)
         self.ui.experimentsTab.setSelectionBehavior(QAbstractItemView.SelectRows) #  при нажатии на таблицу выделяется не ячейка, а выбранная строка целиком
@@ -234,7 +234,7 @@ class MainWindow(QMainWindow):
                 pressure = '-' if str(experiments[i]['pressure']) == 'None' else str(experiments[i]['pressure'])
                 self.ui.experimentsTab.setItem(j, 4, QTableWidgetItem(temperature))
                 self.ui.experimentsTab.setItem(j, 5, QTableWidgetItem(pressure))
-                self.ui.experimentsTab.setItem(j, 6, QTableWidgetItem(reliase.getArticleName(experiments[i]['article'])))
+                self.ui.experimentsTab.setItem(j, 6, QTableWidgetItem(foundation.basis.getArticleName(experiments[i]['article'])))
                 j += 1
     
 
@@ -318,6 +318,9 @@ class MainWindow(QMainWindow):
     # Создание страницы рассчета
     def makeCalculatePage(self):
         self.ui.calculateButton.clicked.connect(self.calculateButton_clicked)
+
+        self.ui.modelComboBox.addItem('Margulis')
+        
         self.ui.methodsComboBox.addItem('Имитации отжига')
         self.ui.methodsComboBox.addItem('Гаусса-Зейделя')
         self.ui.methodsComboBox.addItem('Хукка-Дживса')
@@ -340,10 +343,8 @@ class MainWindow(QMainWindow):
 
     # Изменение видимости полей на странице рассчета
     def turnVisibility(self, visibility: bool = True):
-        self.ui.label_9.setEnabled(visibility)
-        self.ui.label_10.setEnabled(visibility)
-        self.ui.A12_init_edit.setEnabled(visibility)
-        self.ui.A21_init_edit.setEnabled(visibility)
+        self.ui.label_2.setEnabled(visibility)
+        self.ui.init_edit.setEnabled(visibility)
         self.ui.label.setEnabled(not visibility)
         self.ui.label_7.setEnabled(not visibility)
         self.ui.label_11.setEnabled(not visibility)
@@ -361,6 +362,13 @@ class MainWindow(QMainWindow):
             self.turnVisibility(visibility=False)
         else:
             self.turnVisibility(visibility=True)
+
+    # Изменение modelComboBox
+    def updateMethodsComboBox(self):
+        model_name = self.ui.methodsComboBox.currentText()
+        match model_name:
+            case 'Margulis':
+                self.model = maths.functions.margulis
 
     # Изменение methodsComboBox
     def updateMethodsComboBox(self):
@@ -380,7 +388,7 @@ class MainWindow(QMainWindow):
             return (self.ui.A12_min_edit.text().isdigit() and self.ui.A12_max_edit.text().isdigit() and
                     self.ui.A21_min_edit.text().isdigit() and self.ui.A21_max_edit.text().isdigit() and
                     self.ui.count_edit.text().isdigit() and self.checkingExperimentsNumberImput())
-        return self.ui.A12_init_edit.text().isdigit() and self.ui.A21_init_edit.text().isdigit() and self.checkingExperimentsNumberImput()
+        return self.checkingExperimentsNumberImput()
 
     # функция вызова предупреждения об ошибке в случае некорректного ввода
     @staticmethod
@@ -411,10 +419,14 @@ class MainWindow(QMainWindow):
                         attempt = Attempt(id_exp, self.model, self.methods_dict[self.method_name],
                                           {'a12_min': a12_min, 'a12_max': a12_max, 'a21_min': a21_min, 'a21_max': a21_max}, {'result': result})
                     else:
-                        a12 = float(self.ui.A12_init_edit.text())
-                        a21 = float(self.ui.A21_init_edit.text())
-                        a12_new, a21_new = simple_calculation(id_exp, a12, a21, self.methods_dict[self.method_name], self.model)
-                        attempt = Attempt(id_exp, self.model, self.methods_dict[self.method_name], {'a12': a12, 'a21': a21}, {'a12': a12_new, 'a21': a21_new})
+                        init_data_string = '{' + self.ui.init_edit.text() + '}'
+                        try:
+                            init_data = json.loads(init_data_string)
+                        except Exception as ex:
+                            self.errorMessage()
+                        a12_new, a21_new = simple_calculation(id_exp, init_data, self.methods_dict[self.method_name], self.model)
+                        #attempt = Attempt(id_exp, self.model, self.methods_dict[self.method_name], {'a12': a12, 'a21': a21}, {'a12': a12_new, 'a21': a21_new})
+                        attempt = Attempt(id_exp, self.model, self.methods_dict[self.method_name], init_data, {'a12': a12_new, 'a21': a21_new})
                     page = AttemptWidget(attempt)
                     n = attempt.number
                     self.ui.attemptsTabWidget.addTab(page, f'Расчёт {n}')

@@ -1,4 +1,4 @@
-import reliase
+import foundation.basis
 
 class SearchTreeNode:
     def __init__(self, kind: str, childs: list = None, is_element: bool = False):
@@ -33,7 +33,7 @@ class SearchTree:
                 node.add_child(new_node)
 
     def make_all_branch(self):
-        rows = reliase.getAllElements('elements')
+        rows = foundation.basis.getAllElements('elements')
         for row in rows:
             branch = row['branch'].split(';')[:-1] + [[row['name']]]
             self.add_branch(branch)

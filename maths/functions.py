@@ -2,18 +2,17 @@ import decimal as dc
 from sympy import *
 
 class Function:
-    def __init__(self, function_string = ''):
+    def __init__(self, function_string: str = '') -> None:
         self.function_string = function_string
-        self.request = f'res = {self.function_string}'
-        self.compile_code = compile(self.request, '<string>', 'exec')
+        self.compiled_expression = compile(self.function_string, '<string>', 'eval')
 
     def get_string(self):
         return self.function_string
 
-    def result(self, initial_params = {}):
-        ldict = initial_params
-        exec(self.compile_code, globals(), ldict)
-        return ldict['res']
+    def result(self, initial_params: dict[str, any] = None):
+        if initial_params is None:
+            initial_params = {}
+        return eval(self.compiled_expression, globals(), initial_params)
 
     @staticmethod
     def margulis(a1, a2, x, temp):

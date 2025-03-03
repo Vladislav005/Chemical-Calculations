@@ -5,9 +5,8 @@ import math
 import random
 from abc import abstractmethod
 import decimal as dc
-import asyncio
 
-import reliase
+import foundation.basis
 import maths.functions
 from maths.functions import Function
 from matplotlib.pyplot import figure
@@ -16,12 +15,12 @@ from matplotlib.pyplot import figure
 D = dc.Decimal
 R = D(8.31)
 
-# абстрактный класс - метод для обобщения всех используемых методов
+# абстрактный класс - для обобщения всех используемых методов
 class Method(abc.ABC):
     def __init__(self, id_exp: int, used_function: Function):
         self.id_exp = id_exp
         self.used_function = used_function
-        self.experiment_data = reliase.getExperimentsAsID(id_exp)
+        self.experiment_data = foundation.basis.getExperimentsAsID(id_exp)
         self.data = self.make_list(self.id_exp)
         self.temp = D(self.experiment_data['temperature'])
     
@@ -49,7 +48,7 @@ class Method(abc.ABC):
 
     @staticmethod
     def make_list(id_exp):
-        experiment = reliase.getExperimentsAsID(id_exp)
+        experiment = foundation.basis.getExperimentsAsID(id_exp)
         source_data = json.loads(experiment['source_data'])
         result = []
         for i in range(min(len(source_data['x2']), len(source_data['GEJ']))):
@@ -127,11 +126,11 @@ class Method(abc.ABC):
         arr = self.make_list(self.id_exp)
         a1, a2 = 0, 0
 
-        otz = self.calculate(a1, a2)
+        otz = self.calculate({'a12':a1, 'a21':a2})
         a12 = otz[0]
         a21 = otz[1]
 
-        t = reliase.getExperimentsAsID(self.id_exp)['temperature']
+        t = foundation.basis.getExperimentsAsID(self.id_exp)['temperature']
         x = []
         i = arr[0][0]
         while i < arr[len(arr) - 1][0]:
@@ -200,11 +199,9 @@ class MethodGaussZeidel(Method):
     def __init__(self, id_exp: int, used_function: Function = None):
         super().__init__(id_exp, used_function)
 
-    def calculate(self, a12, a21):
-        a12 = a12
-        a21 = a21
-        a1 = a12
-        a2 = a21
+    def calculate(self, initial_data: dict[str, float]):
+        a1 = initial_data['a12']
+        a2 = initial_data['a21']
         step_a1 = 1
         step_a2 = 1
         iterations = 0
@@ -251,7 +248,9 @@ class MethodHookJeeves(Method):
     def __init__(self, id_exp: int, used_function: Function = None):
         super().__init__(id_exp, used_function)
 
-    def calculate(self, a12, a21):
+    def calculate(self, initial_data: dict[str, float]):
+        a1 = initial_data['a12']
+        a2 = initial_data['a21']
         x_coord = [a12, a21]
         ans_list2 = []
         iterat = 0
@@ -318,8 +317,9 @@ class MethodAntigradient(Method):
     def __init__(self, id_exp: int, used_function: Function = None):
         super().__init__(id_exp, used_function)
     
-    def calculate(self,x0, y0):
-        x0, y0 = D(x0), D(y0)
+    def calculate(self, initial_data: dict[str, float]):
+        x0 = D(initial_data['a12'])
+        y0 = D(initial_data['a21'])
         cnt = 0
         eps = D(10 ** (-6))
         xn, yn = x0, y0
@@ -340,8 +340,9 @@ class MethodNewton(Method):
     def __init__(self, id_exp: int, used_function: Function = None):
         super().__init__(id_exp, used_function)
     
-    def calculate(self, x0, y0):
-        x0, y0 = D(x0), D(y0)
+    def calculate(self, initial_data: dict[str, float]):
+        x0 = D(initial_data['a12'])
+        y0 = D(initial_data['a21'])
         cnt = 0
         eps = D(10 ** (-6))
         xn, yn = x0, y0
@@ -371,23 +372,25 @@ def get_method(used_function: Function = None, method_num: int = 0, id_exp: int 
 
 
 if __name__ == '__main__':
-    method = MethodOfSimulatedAnnealing(1, maths.functions.margulis)
-    a12, a21, minimum = method.calculate(0, 0)
-    print(a12,a21,minimum)
+    initial_data = {'a12': 0, 'a21': 0}
+
+    # method = MethodOfSimulatedAnnealing(1, maths.functions.margulis)
+    # a12, a21, minimum = method.calculate(0, 0)
+    # print(a12,a21,minimum)
 
     method = MethodGaussZeidel(1, maths.functions.margulis)
-    a12, a21, minimum = method.calculate(0, 0)
+    a12, a21, minimum = method.calculate(initial_data)
     print(a12,a21,minimum)
 
     method = MethodHookJeeves(1, maths.functions.margulis)
-    a12, a21, minimum = method.calculate(0, 0)
+    a12, a21, minimum = method.calculate(initial_data)
     print(a12,a21,minimum)
 
     method = MethodAntigradient(1, maths.functions.margulis)
-    a12, a21, minimum = method.calculate(0, 0)
+    a12, a21, minimum = method.calculate(initial_data)
     print(a12,a21,minimum)
     method.draw_chart()
 
     method = MethodNewton(1, maths.functions.margulis)
-    a12, a21, minimum = method.calculate(0, 0)
+    a12, a21, minimum = method.calculate(initial_data)
     print(a12,a21,minimum)
