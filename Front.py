@@ -424,9 +424,9 @@ class MainWindow(QMainWindow):
                             init_data = json.loads(init_data_string)
                         except Exception as ex:
                             self.errorMessage()
-                        a12_new, a21_new = simple_calculation(id_exp, init_data, self.methods_dict[self.method_name], self.model)
+                        result = simple_calculation(id_exp, init_data, self.methods_dict[self.method_name], self.model)
                         #attempt = Attempt(id_exp, self.model, self.methods_dict[self.method_name], {'a12': a12, 'a21': a21}, {'a12': a12_new, 'a21': a21_new})
-                        attempt = Attempt(id_exp, self.model, self.methods_dict[self.method_name], init_data, {'a12': a12_new, 'a21': a21_new})
+                        attempt = Attempt(id_exp, self.model, self.methods_dict[self.method_name], init_data, result)
                     page = AttemptWidget(attempt)
                     n = attempt.number
                     self.ui.attemptsTabWidget.addTab(page, f'Расчёт {n}')
