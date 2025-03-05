@@ -5,8 +5,8 @@ from maths.methods import *
 
 def simple_calculation(experiment_id: int, init_data: dict[str, float], method_num: int, used_function: Optional[str]=None):
     method = get_method(used_function, method_num, experiment_id)
-    a12_new, a21_new, _ = method.calculate(init_data)
-    return a12_new, a21_new
+    result, _ = method.calculate(init_data)
+    return result
 
 
 def multi_start(id_exp: int, a12_min: float, a12_max: float, a21_min: float, a21_max: float, count: int, method_num: int, used_function=None):
