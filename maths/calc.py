@@ -9,13 +9,14 @@ def simple_calculation(experiment_id: int, init_data: dict[str, float], method_n
     return result
 
 
-def multi_start(id_exp: int, a12_min: float, a12_max: float, a21_min: float, a21_max: float, count: int, method_num: int, used_function=None):
+def multi_start(id_exp: int, mins: dict[float], maxs: dict[float], count: int, method_num: int, used_function=None):
     method = get_method(used_function, method_num, id_exp)
     result = []
     for i in range(count):
-        a12 = random.uniform(a12_min, a12_max)
-        a21 = random.uniform(a21_min, a21_max)
-        a12_new, a21_new, _ = method.calculate({'a12':a12, 'a21': a21})
-        if a12_min <= a12_new <= a12_max and a21_min <= a21_new <= a21_max:
-            result.append([a12_new, a21_new])
+        random_params = {}
+        for key in mins.keys():
+            random_params[key] = random.uniform(mins[key], maxs[key])
+        new_params, _ = method.calculate(random_params)
+        if all(mins[key] <= new_params[key] <= maxs[key] for key in new_params.keys()):
+            result.append(new_params)
     return result

@@ -39,7 +39,9 @@ class AttemptWidget(QWidget):
         self.canvas.draw()
 
     def showInits(self):
+        self.methods_dict = {0:'Имитации отжига', 1:'Гаусса-Зейделя', 2:'Хукка-Дживса', 3:'Антиградиент', 4:'Ньютона'}
         self.ui.initTextBrowser.append(f'№ Эксп.: {self.attempt.id_exp}')
+        self.ui.initTextBrowser.append(f'Метод опт.: {self.methods_dict[self.attempt.id_method]}')
         for item in self.attempt.init.items():
             self.ui.initTextBrowser.append(f'{item[0]}: {item[1]}')
 
@@ -343,17 +345,13 @@ class MainWindow(QMainWindow):
 
     # Изменение видимости полей на странице рассчета
     def turnVisibility(self, visibility: bool = True):
-        self.ui.label_2.setEnabled(visibility)
+        self.ui.attempt_label_4.setEnabled(visibility)
         self.ui.init_edit.setEnabled(visibility)
-        self.ui.label.setEnabled(not visibility)
-        self.ui.label_7.setEnabled(not visibility)
-        self.ui.label_11.setEnabled(not visibility)
-        self.ui.label_8.setEnabled(not visibility)
-        self.ui.label_14.setEnabled(not visibility)
-        self.ui.A12_min_edit.setEnabled(not visibility)
-        self.ui.A12_max_edit.setEnabled(not visibility)
-        self.ui.A21_min_edit.setEnabled(not visibility)
-        self.ui.A21_max_edit.setEnabled(not visibility)
+        self.ui.attempt_label_5.setEnabled(not visibility)
+        self.ui.attempt_label_6.setEnabled(not visibility)
+        self.ui.attempt_label_7.setEnabled(not visibility)
+        self.ui.min_edit.setEnabled(not visibility)
+        self.ui.max_edit.setEnabled(not visibility)
         self.ui.count_edit.setEnabled(not visibility)
 
     # Переключение на мультизапуск и обратно
@@ -377,6 +375,7 @@ class MainWindow(QMainWindow):
     # функция для проверки корректности ввода данных пользователем
     def checkingExperimentsNumberImput(self):
         id_experiments = self.ui.id_exp_edit.text()
+        if not id_experiments: return False
         for i in id_experiments:
             if i not in '0123456789, ':
                 return False
@@ -384,10 +383,6 @@ class MainWindow(QMainWindow):
 
     # Проверка на корректность ввода данных
     def checkingInput(self):
-        if self.ui.multistartCheckBox.isChecked():
-            return (self.ui.A12_min_edit.text().isdigit() and self.ui.A12_max_edit.text().isdigit() and
-                    self.ui.A21_min_edit.text().isdigit() and self.ui.A21_max_edit.text().isdigit() and
-                    self.ui.count_edit.text().isdigit() and self.checkingExperimentsNumberImput())
         return self.checkingExperimentsNumberImput()
 
     # функция вызова предупреждения об ошибке в случае некорректного ввода
@@ -410,14 +405,21 @@ class MainWindow(QMainWindow):
                     id_exp = int(id_experiment)
 
                     if self.ui.multistartCheckBox.isChecked():
-                        a12_min = float(self.ui.A12_min_edit.text())
-                        a12_max = float(self.ui.A12_max_edit.text())
-                        a21_min = float(self.ui.A21_min_edit.text())
-                        a21_max = float(self.ui.A21_max_edit.text())
+                        mins_string = '{' + self.ui.min_edit.text() + '}'
+                        maxs_string = '{' + self.ui.max_edit.text() + '}'
+                        try:
+                            maxs = json.loads(maxs_string)
+                            mins = json.loads(mins_string)
+                            if not maxs.keys() == mins.keys():
+                                raise ValueError("maxs and mins signatures don't match")
+                        except Exception as ex:
+                            self.errorMessage()
+                            return
+                        
                         count = int(self.ui.count_edit.text())
-                        result = multi_start(id_exp, a12_min, a12_max, a21_min, a21_max, count, self.methods_dict[self.method_name], self.model)
+                        result = multi_start(id_exp, mins,maxs, count, self.methods_dict[self.method_name], self.model)
                         attempt = Attempt(id_exp, self.model, self.methods_dict[self.method_name],
-                                          {'a12_min': a12_min, 'a12_max': a12_max, 'a21_min': a21_min, 'a21_max': a21_max}, {'result': result})
+                                          {'mins':mins, 'maxs':maxs}, {'result':result})
                     else:
                         init_data_string = '{' + self.ui.init_edit.text() + '}'
                         try:
