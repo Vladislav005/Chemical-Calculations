@@ -43,12 +43,14 @@ class Method(abc.ABC):
         params = initial_params.copy()
         params['x'] = x
         params['temp'] = self.temp
-        return (dc.Decimal(str(gej)) - self.model_deriative(variable, params)) ** 2
+        return self.model_deriative(variable, params) * 2 * (dc.Decimal(str(gej)) - self.model_result(params))
     def minimum_second_deriative(self, gej: float, initial_params: dict[str, float], x: float, first_variable: str, second_variable: str) -> dc.Decimal:
         params = initial_params.copy()
         params['x'] = x
         params['temp'] = self.temp
-        return (dc.Decimal(str(gej)) - self.model_second_deriative(first_variable,second_variable, params)) ** 2
+        return 2 * self.model_second_deriative(first_variable,second_variable, params) * \
+                (dc.Decimal(str(gej)) - self.model_result(params)) - \
+                2 * self.model_deriative(first_variable,params) * self.model_deriative(second_variable,params)
 
     def minimum_sum(self, initial_params: dict[str, float]) -> dc.Decimal:
         return sum(self.minimum(gej, initial_params, x) for x, gej in self.data)
@@ -60,7 +62,6 @@ class Method(abc.ABC):
     def H(self, initial_params: dict[str,float]):
         h = [[D(self.minimum_second_deriative_sum(initial_params,'a12','a12')), D(self.minimum_second_deriative_sum(initial_params,'a12','a21'))],
              [D(self.minimum_second_deriative_sum(initial_params,'a12','a21')), D(self.minimum_second_deriative_sum(initial_params,'a12','a12'))]]
-        print(h)
         detH = D(h[0][0] * h[1][1] - h[0][1] * h[1][0])
         return [[h[1][1] / detH, (D(-1) * h[0][1]) / detH], [(D(-1) * h[1][0]) / detH, h[0][0] / detH]]
 
@@ -272,7 +273,7 @@ class MethodNewton(Method):
             InvH = self.H({'a12':float(x0),'a21':float(y0)})
             xn = D(x0 - (self.minimum_deriative_sum({'a12':float(x0),'a21':float(y0)},'a12') * InvH[0][0] + self.minimum_deriative_sum({'a12':float(x0),'a21':float(y0)},'a21') * InvH[0][1]))
             yn = D(y0 - (self.minimum_deriative_sum({'a12':float(x0),'a21':float(y0)},'a12') * InvH[1][0] + self.minimum_deriative_sum({'a12':float(x0),'a21':float(y0)},'a21') * InvH[1][1]))
-        return {'a12':float(round(xn, 5)), 'a21':float(round(yn, 5))}, float(round(self.f(xn, yn), 5))
+        return {'a12':float(round(xn, 5)), 'a21':float(round(yn, 5))}, float(round(self.minimum_sum({'a12':float(xn),'a21':float(yn)}), 5))
 
 
 def get_method(used_function: Function = None, method_num: int = 0, id_exp: int = 0):
